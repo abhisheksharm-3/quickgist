@@ -7,9 +7,9 @@ import {
   NavbarMenuToggle,
   NavbarMenu,
   NavbarMenuItem,
-  Link,
   Button
 } from "@nextui-org/react";
+import { Link } from "react-router-dom";
 
 const NavbarComponent: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -37,7 +37,7 @@ const NavbarComponent: React.FC = () => {
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
         {menuItems.map((item, index) => (
           <NavbarItem key={`${item.name}-${index}`}>
-            <Link color="foreground" href={item.href}>
+            <Link color="foreground" to={item.href}>
               {item.name}
             </Link>
           </NavbarItem>
@@ -58,7 +58,7 @@ const NavbarComponent: React.FC = () => {
             <Link
               color="foreground"
               className="w-full"
-              href={item.href}
+              to={item.href}
               size="lg"
             >
               {item.name}
