@@ -59,7 +59,6 @@ const NavbarComponent: React.FC = () => {
               color="foreground"
               className="w-full"
               to={item.href}
-              size="lg"
             >
               {item.name}
             </Link>
