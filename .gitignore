@@ -45,3 +45,4 @@ dist-ssr
 
 # Go workspace file
 go.work
+firebase-secrets.json

@@ -63,7 +63,7 @@ const HomePage = () => {
               QuickGist
             </h1>
             <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed px-4">
-              Share text snippets and files instantly from anywhere in the
+              Share text snippets instantly from anywhere in the
               world.
               <span className="block mt-2 sm:mt-4 font-semibold text-blue-300 text-2xl sm:text-3xl">
                 Fast, free, and secure.
@@ -89,14 +89,14 @@ const HomePage = () => {
                 <RiLockLine className="h-10 w-10 sm:h-12 sm:w-12 text-green-400" />
               }
               title="Secure Sharing"
-              description="End-to-end encryption for all your snippets and files"
+              description="End-to-end encryption for all your snippets"
             />
             <FeatureCard
               icon={
                 <RiGlobalLine className="h-10 w-10 sm:h-12 sm:w-12 text-purple-400" />
               }
               title="Universal Support"
-              description="Share any text or file type, from any device"
+              description="Share any text, from any device"
             />
           </motion.div>
 

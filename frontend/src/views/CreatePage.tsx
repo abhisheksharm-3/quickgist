@@ -1,117 +1,255 @@
-import React, { useState, ChangeEvent, DragEvent } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { RiFileAddLine, RiUploadCloud2Line, RiFileTextLine, RiCodeLine } from "@remixicon/react";
+import {
+  RiFileAddLine,
+  RiCodeLine,
+  RiFileTextLine,
+} from "@remixicon/react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "../components/ui/drawer";
 import Layout from "../components/Layout";
+import axios from "axios";
+import { toast } from "sonner";
+import { useMediaQuery } from "../hooks/use-media-query";
+import { Snippet } from "@nextui-org/react";
+
+interface GistData {
+  snippetId: string;
+  title: string;
+  description: string;
+  content: string;
+  isDraft: boolean;
+}
 
 const CreatePage: React.FC = () => {
-  const [dragActive, setDragActive] = useState<boolean>(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [content, setContent] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [submittedGist, setSubmittedGist] = useState<GistData | null>(null);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  const handleDrag = (e: DragEvent<HTMLDivElement>): void => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+  const sanitizeInput = (input: string): string => {
+    return input.replace(/<[^>]*>?/gm, "");
+  };
+
+  const handleSubmit = async (isDraft: boolean): Promise<void> => {
+    setIsSubmitting(true);
+    try {
+      const sanitizedData: Omit<GistData, "snippetId"> = {
+        title: sanitizeInput(title),
+        description: sanitizeInput(description),
+        content: content,
+        isDraft,
+      };
+
+      const response = await axios.post<GistData>(
+        `${import.meta.env.VITE_SERVER_URI}/gist/create`,
+        sanitizedData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      setSubmittedGist(response.data);
+      setShowModal(true);
+    } catch (error) {
+      console.error("Error submitting gist:", error);
+      toast.error("Failed to create a Gist", {
+        description: "Please try again later.",
+        style: {
+          background: "#2D3748",
+          border: "1px solid #4A5568",
+          color: "#FFFFFF",
+        },
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDrop = (e: DragEvent<HTMLDivElement>): void => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-    }
+  const closeModalAndReset = (): void => {
+    setShowModal(false);
+    setTitle("");
+    setDescription("");
+    setContent("");
+    setSubmittedGist(null);
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
+  const SuccessContent = () => (
+    <div className="space-y-4 px-2 sm:px-4">
+      <div className="bg-gray-700 rounded-lg p-4">
+        <h3 className="font-semibold mb-2 text-xl text-white">
+          {submittedGist?.title}
+        </h3>
+        <p className="text-lg mb-2 text-gray-300">
+          {submittedGist?.description}
+        </p>
+        <pre className="bg-gray-800 p-4 rounded text-sm overflow-x-auto text-gray-300">
+          {submittedGist?.content.slice(0, 100)}...
+        </pre>
+      </div>
+      <div className="mt-4">
+        <p className="text-white mb-2">Snippet URL:</p>
+        <div className="max-w-full overflow-hidden">
+          <Snippet
+            variant="flat"
+            color="primary"
+            className="w-full text-xs sm:text-sm break-all"
+            symbol=""
+          >
+            {`${import.meta.env.VITE_FRONTEND_URI}/view/${submittedGist?.snippetId}`}
+          </Snippet>
+        </div>
+      </div>
+      <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 mt-4">
+        <Button
+          variant="outline"
+          onClick={closeModalAndReset}
+          className="w-full sm:w-auto bg-gray-600 hover:bg-gray-500 text-white text-lg py-2 px-4 rounded transition-all duration-300"
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 bg-gradient-to-b from-cyan-900 to-black">
+        {/* ... (main form content remains the same) ... */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-3xl"
+          className="w-full max-w-3xl rounded-xl shadow-lg p-6 sm:p-8 bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg border border-gray-700"
         >
-          <h1 className="text-4xl font-bold text-blue-400 mb-8 flex items-center">
-            <RiFileAddLine className="mr-4 h-10 w-10" />
+          <h1 className="text-5xl font-bold text-blue-400 mb-8 flex items-center">
+            <RiFileAddLine className="mr-4 h-12 w-12" />
             Create New Gist
           </h1>
-          <form className="space-y-6">
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
             <div>
-              <Label htmlFor="title" className="text-lg font-medium text-gray-200 mb-2 block">Title</Label>
-              <Input 
-                id="title" 
-                placeholder="Enter a title for your gist" 
-                className="bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <Label htmlFor="description" className="text-lg font-medium text-gray-200 mb-2 block">Description</Label>
-              <Textarea 
-                id="description" 
-                placeholder="Describe your gist" 
-                className="bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <Label htmlFor="content" className="text-lg font-medium text-gray-200 mb-2 block">Content</Label>
-              <Textarea 
-                id="content" 
-                placeholder="Paste your code or text here" 
-                className="bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 min-h-[200px]"
-              />
-            </div>
-            <div>
-              <Label className="text-lg font-medium text-gray-200 mb-2 block">Or Upload a File</Label>
-              <div 
-                className={`border-2 border-dashed rounded-lg p-8 text-center ${dragActive ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700'} transition-colors duration-300`}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
+              <Label
+                htmlFor="title"
+                className="text-xl font-medium text-gray-200 mb-2 block"
               >
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="hidden"
-                  onChange={handleChange}
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <div className="flex flex-col items-center">
-                    <RiUploadCloud2Line className="h-16 w-16 text-blue-400 mb-4" />
-                    <p className="text-lg text-gray-300">
-                      {file ? file.name : 'Drag and drop your file here, or click to select'}
-                    </p>
-                  </div>
-                </label>
-              </div>
+                Title
+              </Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter a title for your gist"
+                className="bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500 text-lg"
+                maxLength={100}
+                required
+              />
             </div>
-            <div className="flex space-x-4">
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg">
-                <RiCodeLine className="mr-2 h-5 w-5" />
-                Create Gist
+
+            <div>
+              <Label
+                htmlFor="description"
+                className="text-xl font-medium text-gray-200 mb-2 block"
+              >
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe your gist"
+                className="bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500 text-lg"
+                maxLength={500}
+              />
+            </div>
+            <div>
+              <Label
+                htmlFor="content"
+                className="text-xl font-medium text-gray-200 mb-2 block"
+              >
+                Content
+              </Label>
+              <Textarea
+                id="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Paste your code or text here"
+                className="bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500 min-h-[200px] text-lg"
+                required
+              />
+            </div>
+            <div className="bg-gray-700 rounded-lg p-4 text-center">
+              <p className="text-yellow-400 font-semibold mb-2 text-lg">
+                Coming Soon!
+              </p>
+              <p className="text-gray-300 text-lg">
+                File upload functionality will be available in a future update.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+              <Button
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 text-xl transition-all duration-300 transform hover:scale-105"
+                onClick={() => handleSubmit(false)}
+                disabled={isSubmitting}
+              >
+                <RiCodeLine className="mr-2 h-6 w-6" />
+                {isSubmitting ? "Submitting..." : "Create Gist"}
               </Button>
-              <Button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 text-lg">
-                <RiFileTextLine className="mr-2 h-5 w-5" />
-                Save as Draft
+              <Button
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-4 text-xl transition-all duration-300 transform hover:scale-105"
+                onClick={() => handleSubmit(true)}
+                disabled={isSubmitting}
+              >
+                <RiFileTextLine className="mr-2 h-6 w-6" />
+                {isSubmitting ? "Saving..." : "Save as Draft"}
               </Button>
             </div>
           </form>
         </motion.div>
+        {isDesktop ? (
+          <Dialog open={showModal} onOpenChange={setShowModal}>
+            <DialogContent className="bg-gray-800 border border-gray-700 shadow-2xl max-w-2xl w-full">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-blue-400">Gist Created Successfully!</DialogTitle>
+              </DialogHeader>
+              <SuccessContent />
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <Drawer open={showModal} onOpenChange={setShowModal}>
+            <DrawerContent className="bg-gray-800 border-t border-gray-700">
+              <DrawerHeader className="border-b border-gray-700">
+                <DrawerTitle className="text-2xl font-bold text-blue-400">Gist Created Successfully!</DrawerTitle>
+                <DrawerDescription className="text-gray-300">
+                  Your gist has been created. You can copy the URL or close this drawer.
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="p-4">
+                <SuccessContent />
+              </div>
+            </DrawerContent>
+          </Drawer>
+        )}
       </div>
     </Layout>
   );

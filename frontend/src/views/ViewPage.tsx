@@ -1,115 +1,125 @@
-
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { RiFileTextLine, RiTimeLine, RiUser3Line, RiStarLine, RiGitBranchLine } from "@remixicon/react";
+import { RiFileTextLine, RiTimeLine, RiFileCopyLine, RiCodeLine } from "@remixicon/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import Layout from "../components/Layout";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { toast } from 'sonner';
+import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+
+export interface GistData {
+  snippetId: string;
+  title: string;
+  description: string;
+  content: string;
+  isDraft: boolean;
+  createdAt: string;
+}
 
 const ViewPage = () => {
   const { id } = useParams();
-
-  // Dummy data
-  const gistData = {
-    id: id,
-    title: "Awesome React Hooks",
-    description: "A collection of custom React hooks for common use cases",
-    content: `import { useState, useEffect } from 'react';
-
-export const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+  const [gistData, setGistData] = useState<GistData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
+    const fetchGistData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get<GistData>(`${import.meta.env.VITE_SERVER_URI}/gist/view/${id}`);
+        setGistData(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch snippet data');
+        setLoading(false);
+      }
     };
-  }, [value, delay]);
 
-  return debouncedValue;
-};
+    fetchGistData();
+  }, [id]);
 
-export const useLocalStorage = (key, initialValue) => {
-  // ... implementation
-};
-
-export const useMediaQuery = (query) => {
-  // ... implementation
-};`,
-    language: "javascript",
-    author: "SpaceCoderX",
-    created: "2024-08-01T12:00:00Z",
-    stars: 42,
-    forks: 13,
+  const copyToClipboard = () => {
+    if (gistData) {
+      navigator.clipboard.writeText(gistData.content);
+      toast.error("Copied to Clipboard", {
+        description: "You can use it now.",
+        style: {
+          background: "#2D3748",
+          border: "1px solid #4A5568",
+          color: "#FFFFFF",
+        },
+      });
+    }
   };
+
+  if (loading) return <Layout><div className="flex justify-center items-center h-screen text-xl font-semibold">Loading...</div></Layout>;
+  if (error) return <Layout><div className="flex justify-center items-center h-screen text-xl font-semibold text-red-500">Error: {error}</div></Layout>;
+  if (!gistData) return <Layout><div className="flex justify-center items-center h-screen text-xl font-semibold">No data found</div></Layout>;
 
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+      <div className="max-w-5xl mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-4xl"
         >
-          <Card className="bg-gray-800 border-gray-700 shadow-xl">
-            <CardHeader className="border-b border-gray-700">
-              <div className="flex justify-between items-center">
+          <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 shadow-2xl">
+            <CardHeader className="border-b border-gray-700 p-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <CardTitle className="text-3xl font-bold text-blue-400 flex items-center">
-                    <RiFileTextLine className="mr-2 h-8 w-8" />
+                  <CardTitle className="text-4xl font-bold text-blue-400 flex items-center mb-2">
+                    <RiFileTextLine className="mr-3 h-10 w-10" />
                     {gistData.title}
                   </CardTitle>
-                  <CardDescription className="text-gray-400 mt-2">
+                  <CardDescription className="text-gray-300 text-lg">
                     {gistData.description}
                   </CardDescription>
                 </div>
-                <div className="flex space-x-2">
-                  <Button variant="outline" className="text-green-400 border-green-400 hover:bg-green-400 hover:text-gray-900">
-                    <RiStarLine className="mr-1" /> Star
-                  </Button>
-                  <Button variant="outline" className="text-purple-400 border-purple-400 hover:bg-purple-400 hover:text-gray-900">
-                    <RiGitBranchLine className="mr-1" /> Fork
-                  </Button>
-                </div>
+                <Button 
+                  onClick={copyToClipboard}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-all duration-200 ease-in-out transform hover:scale-105"
+                >
+                  <RiFileCopyLine className="mr-2 h-5 w-5" /> Copy Code
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-center text-gray-400 mb-4">
-                <div className="flex items-center">
-                  <RiUser3Line className="mr-2" />
-                  <span>{gistData.author}</span>
-                </div>
-                <div className="flex items-center">
-                  <RiTimeLine className="mr-2" />
-                  <span>{new Date(gistData.created).toLocaleDateString()}</span>
+            <CardContent className="p-8">
+              <div className="flex justify-between items-center text-gray-300 mb-6">
+                <div className="flex items-center text-lg">
+                  <RiTimeLine className="mr-2 h-6 w-6" />
+                  <span>{new Date(gistData.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </div>
               </div>
-              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                <pre className="text-green-400 whitespace-pre-wrap">
-                  <code>{gistData.content}</code>
-                </pre>
+              <div className="rounded-lg overflow-hidden shadow-lg">
+                <div className="bg-gray-800 text-gray-300 px-4 py-2 flex items-center">
+                  <RiCodeLine className="mr-2" />
+                  <span className="font-semibold">Snippet</span>
+                </div>
+                <SyntaxHighlighter 
+                  language="javascript" 
+                  style={atomDark}
+                  customStyle={{
+                    margin: 0,
+                    padding: '1.5rem',
+                    fontSize: '1rem',
+                    lineHeight: '1.6',
+                    borderRadius: '0 0 0.5rem 0.5rem',
+                  }}
+                >
+                  {gistData.content}
+                </SyntaxHighlighter>
               </div>
-              <div className="mt-6 flex justify-between items-center text-gray-400">
-                <div className="flex space-x-4">
-                  <span className="flex items-center">
-                    <RiStarLine className="mr-1" /> {gistData.stars} stars
-                  </span>
-                  <span className="flex items-center">
-                    <RiGitBranchLine className="mr-1" /> {gistData.forks} forks
-                  </span>
-                </div>
-                <div>
-                  <Button variant="link" className="text-blue-400 hover:text-blue-300">
-                    Raw
-                  </Button>
-                  <Button variant="link" className="text-blue-400 hover:text-blue-300">
-                    Download
-                  </Button>
-                </div>
+              <div className="mt-8 flex justify-end items-center">
+                <Button variant="outline" className="mr-4 text-blue-400 hover:text-blue-300 hover:bg-blue-900 border-blue-400 hover:border-blue-300 transition-all duration-200">
+                  Raw
+                </Button>
+                <Button variant="outline" className="text-blue-400 hover:text-blue-300 hover:bg-blue-900 border-blue-400 hover:border-blue-300 transition-all duration-200">
+                  Download
+                </Button>
               </div>
             </CardContent>
           </Card>

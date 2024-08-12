@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"google.golang.org/grpc/codes"
@@ -24,7 +25,7 @@ func (app *application) gistView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	doc, err := app.firestore.Collection("gists").Doc(snippetId).Get(ctx)
+	doc, err := app.firestore.Collection("userSnippets").Doc(snippetId).Get(ctx)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			app.notFound(w)
@@ -37,11 +38,19 @@ func (app *application) gistView(w http.ResponseWriter, r *http.Request) {
 	data := doc.Data()
 
 	response := struct {
-		SnippetId string `json:"snippetId"`
-		Content   string `json:"content"`
+		SnippetId   string    `json:"snippetId"`
+		Title       string    `json:"title"`
+		Description string    `json:"description"`
+		Content     string    `json:"content"`
+		IsDraft     bool      `json:"isDraft"`
+		CreatedAt   time.Time `json:"createdAt"`
 	}{
-		SnippetId: snippetId,
-		Content:   fmt.Sprintf("%v", data["content"]),
+		SnippetId:   snippetId,
+		Title:       fmt.Sprintf("%v", data["title"]),
+		Description: fmt.Sprintf("%v", data["description"]),
+		Content:     fmt.Sprintf("%v", data["content"]),
+		IsDraft:     data["isDraft"].(bool),
+		CreatedAt:   data["createdAt"].(time.Time),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -50,8 +59,10 @@ func (app *application) gistView(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Content   string `json:"content"`
-		SnippetId string `json:"snippetId"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Content     string `json:"content"`
+		IsDraft     bool   `json:"isDraft"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&input)
@@ -60,26 +71,44 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.Content == "" || input.SnippetId == "" {
+	if input.Title == "" || input.Content == "" {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
 	ctx := context.Background()
-	_, err = app.firestore.Collection("gists").Doc(input.SnippetId).Set(ctx, map[string]interface{}{
-		"content": input.Content,
-	})
+
+	// Generate a new document ID
+	docRef := app.firestore.Collection("userSnippets").NewDoc()
+
+	userSnippets := map[string]interface{}{
+		"title":       input.Title,
+		"description": input.Description,
+		"content":     input.Content,
+		"isDraft":     input.IsDraft,
+		"createdAt":   time.Now(),
+	}
+
+	_, err = docRef.Set(ctx, userSnippets)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
 	response := struct {
-		SnippetId string `json:"snippetId"`
-		Content   string `json:"content"`
+		SnippetId   string    `json:"snippetId"`
+		Title       string    `json:"title"`
+		Description string    `json:"description"`
+		Content     string    `json:"content"`
+		IsDraft     bool      `json:"isDraft"`
+		CreatedAt   time.Time `json:"createdAt"`
 	}{
-		SnippetId: input.SnippetId,
-		Content:   input.Content,
+		SnippetId:   docRef.ID,
+		Title:       input.Title,
+		Description: input.Description,
+		Content:     input.Content,
+		IsDraft:     input.IsDraft,
+		CreatedAt:   userSnippets["createdAt"].(time.Time),
 	}
 
 	w.Header().Set("Content-Type", "application/json")

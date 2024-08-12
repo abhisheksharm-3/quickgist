@@ -9,6 +9,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 )
 
 type application struct {
@@ -19,21 +20,19 @@ type application struct {
 
 func main() {
 	addr := flag.String("addr", ":8000", "HTTP Network Port Address")
-	projectID := flag.String("project", "", "Firebase Project ID")
-	//call parse method before using addr to assign cli given value to addr
+	serviceAccountPath := flag.String("sa", "", "Path to Firebase Service Account Key JSON file")
 	flag.Parse()
 
-	if *projectID == "" {
-		log.Fatal("Firebase Project ID must be provided")
+	if *serviceAccountPath == "" {
+		log.Fatal("Path to Firebase Service Account Key JSON file must be provided")
 	}
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	//mux is a request multiplexer that matches the URL of each incoming request against a list of registered patterns and calls the handler for the pattern that most closely matches the URL.
 	ctx := context.Background()
-	conf := &firebase.Config{ProjectID: *projectID}
-	firebaseApp, err := firebase.NewApp(ctx, conf)
+	opt := option.WithCredentialsFile(*serviceAccountPath)
+	firebaseApp, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		errorLog.Fatalf("Error initializing Firebase app: %v", err)
 	}
