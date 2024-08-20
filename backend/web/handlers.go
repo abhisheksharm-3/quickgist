@@ -63,6 +63,7 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 		Description string `json:"description"`
 		Content     string `json:"content"`
 		IsDraft     bool   `json:"isDraft"`
+		userId      string `json:"userId"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&input)
@@ -89,6 +90,12 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 		"createdAt":   time.Now(),
 	}
 
+	// Add userId to the document if it's provided
+	if input.userId != "" {
+		userSnippets["userId"] = input.userId
+	}
+	fmt.Println(input)
+
 	_, err = docRef.Set(ctx, userSnippets)
 	if err != nil {
 		app.serverError(w, err)
@@ -102,6 +109,7 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 		Content     string    `json:"content"`
 		IsDraft     bool      `json:"isDraft"`
 		CreatedAt   time.Time `json:"createdAt"`
+		userId      string    `json:"userId,omitempty"` // Include userId in response
 	}{
 		SnippetId:   docRef.ID,
 		Title:       input.Title,
@@ -109,6 +117,7 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 		Content:     input.Content,
 		IsDraft:     input.IsDraft,
 		CreatedAt:   userSnippets["createdAt"].(time.Time),
+		userId:      input.userId,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

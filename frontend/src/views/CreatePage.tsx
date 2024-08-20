@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  RiFileAddLine,
-  RiCodeLine,
-  RiFileTextLine,
-} from "@remixicon/react";
+import { RiFileAddLine, RiCodeLine, RiFileTextLine } from "@remixicon/react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
@@ -21,12 +17,14 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerDescription,
+  DrawerClose,
 } from "../components/ui/drawer";
 import Layout from "../components/Layout";
 import axios from "axios";
 import { toast } from "sonner";
 import { useMediaQuery } from "../hooks/use-media-query";
-import { Snippet } from "@nextui-org/react";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import { Switch } from "@nextui-org/react";
 
 interface GistData {
   snippetId: string;
@@ -34,6 +32,7 @@ interface GistData {
   description: string;
   content: string;
   isDraft: boolean;
+  userId?: string;
 }
 
 const CreatePage: React.FC = () => {
@@ -43,13 +42,28 @@ const CreatePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [submittedGist, setSubmittedGist] = useState<GistData | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
 
   const sanitizeInput = (input: string): string => {
     return input.replace(/<[^>]*>?/gm, "");
   };
 
   const handleSubmit = async (isDraft: boolean): Promise<void> => {
+    if (!isAnonymous && !isSignedIn) {
+      toast.error("Please sign in to save the gist to your account", {
+        description: "You can sign in or switch to anonymous mode to continue.",
+        style: {
+          background: "#2D3748",
+          border: "1px solid #4A5568",
+          color: "#FFFFFF",
+        },
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const sanitizedData: Omit<GistData, "snippetId"> = {
@@ -57,8 +71,11 @@ const CreatePage: React.FC = () => {
         description: sanitizeInput(description),
         content: content,
         isDraft,
+        userId: isAnonymous ? undefined : user?.id,
       };
-
+      console.log(sanitizedData);
+      console.log(isAnonymous);
+      
       const response = await axios.post<GistData>(
         `${import.meta.env.VITE_SERVER_URI}/gist/create`,
         sanitizedData,
@@ -93,10 +110,11 @@ const CreatePage: React.FC = () => {
     setDescription("");
     setContent("");
     setSubmittedGist(null);
+    setIsAnonymous(true);
   };
 
   const SuccessContent = () => (
-    <div className="space-y-4 px-2 sm:px-4">
+    <div className="space-y-4">
       <div className="bg-gray-700 rounded-lg p-4">
         <h3 className="font-semibold mb-2 text-xl text-white">
           {submittedGist?.title}
@@ -110,25 +128,16 @@ const CreatePage: React.FC = () => {
       </div>
       <div className="mt-4">
         <p className="text-white mb-2">Snippet URL:</p>
-        <div className="max-w-full overflow-hidden">
-          <Snippet
-            variant="flat"
-            color="primary"
-            className="w-full text-xs sm:text-sm break-all"
-            symbol=""
-          >
-            {`${import.meta.env.VITE_FRONTEND_URI}/view/${submittedGist?.snippetId}`}
-          </Snippet>
-        </div>
+        <Input
+          readOnly
+          value={`${import.meta.env.VITE_FRONTEND_URI}/view/${
+            submittedGist?.snippetId
+          }`}
+          className="bg-gray-700 text-white"
+        />
       </div>
-      <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 mt-4">
-        <Button
-          variant="outline"
-          onClick={closeModalAndReset}
-          className="w-full sm:w-auto bg-gray-600 hover:bg-gray-500 text-white text-lg py-2 px-4 rounded transition-all duration-300"
-        >
-          Close
-        </Button>
+      <div className="flex justify-end mt-4">
+        <Button onClick={closeModalAndReset}>Close</Button>
       </div>
     </div>
   );
@@ -136,7 +145,6 @@ const CreatePage: React.FC = () => {
   return (
     <Layout>
       <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 bg-gradient-to-b from-cyan-900 to-black">
-        {/* ... (main form content remains the same) ... */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -148,10 +156,10 @@ const CreatePage: React.FC = () => {
             Create New Gist
           </h1>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-            <div>
+            <div className="space-y-2">
               <Label
                 htmlFor="title"
-                className="text-xl font-medium text-gray-200 mb-2 block"
+                className="text-xl font-medium text-gray-200"
               >
                 Title
               </Label>
@@ -166,10 +174,10 @@ const CreatePage: React.FC = () => {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label
                 htmlFor="description"
-                className="text-xl font-medium text-gray-200 mb-2 block"
+                className="text-xl font-medium text-gray-200"
               >
                 Description
               </Label>
@@ -182,10 +190,11 @@ const CreatePage: React.FC = () => {
                 maxLength={500}
               />
             </div>
-            <div>
+
+            <div className="space-y-2">
               <Label
                 htmlFor="content"
-                className="text-xl font-medium text-gray-200 mb-2 block"
+                className="text-xl font-medium text-gray-200"
               >
                 Content
               </Label>
@@ -198,27 +207,38 @@ const CreatePage: React.FC = () => {
                 required
               />
             </div>
-            <div className="bg-gray-700 rounded-lg p-4 text-center">
-              <p className="text-yellow-400 font-semibold mb-2 text-lg">
-                Coming Soon!
-              </p>
-              <p className="text-gray-300 text-lg">
-                File upload functionality will be available in a future update.
-              </p>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="anonymous"
+                color="success"
+                checked={isAnonymous}
+                onValueChange={(isAnonymous) => (setIsAnonymous(!isAnonymous))}
+              />
+              <Label htmlFor="anonymous" className="text-lg text-gray-200">
+                Create anonymously
+              </Label>
             </div>
+
+            {!isAnonymous && !isSignedIn && (
+              <p className="text-yellow-400">
+                Please sign in to save the gist to your account.
+              </p>
+            )}
+
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <Button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 text-xl transition-all duration-300 transform hover:scale-105"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 text-xl"
                 onClick={() => handleSubmit(false)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || (!isAnonymous && !isSignedIn)}
               >
                 <RiCodeLine className="mr-2 h-6 w-6" />
                 {isSubmitting ? "Submitting..." : "Create Gist"}
               </Button>
               <Button
-                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-4 text-xl transition-all duration-300 transform hover:scale-105"
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-4 text-xl"
                 onClick={() => handleSubmit(true)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || (!isAnonymous && !isSignedIn)}
               >
                 <RiFileTextLine className="mr-2 h-6 w-6" />
                 {isSubmitting ? "Saving..." : "Save as Draft"}
@@ -226,11 +246,14 @@ const CreatePage: React.FC = () => {
             </div>
           </form>
         </motion.div>
+
         {isDesktop ? (
           <Dialog open={showModal} onOpenChange={setShowModal}>
             <DialogContent className="bg-gray-800 border border-gray-700 shadow-2xl max-w-2xl w-full">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-blue-400">Gist Created Successfully!</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-blue-400">
+                  Gist Created Successfully!
+                </DialogTitle>
               </DialogHeader>
               <SuccessContent />
             </DialogContent>
@@ -239,14 +262,20 @@ const CreatePage: React.FC = () => {
           <Drawer open={showModal} onOpenChange={setShowModal}>
             <DrawerContent className="bg-gray-800 border-t border-gray-700">
               <DrawerHeader className="border-b border-gray-700">
-                <DrawerTitle className="text-2xl font-bold text-blue-400">Gist Created Successfully!</DrawerTitle>
+                <DrawerTitle className="text-2xl font-bold text-blue-400">
+                  Gist Created Successfully!
+                </DrawerTitle>
                 <DrawerDescription className="text-gray-300">
-                  Your gist has been created. You can copy the URL or close this drawer.
+                  Your gist has been created. You can copy the URL or close this
+                  drawer.
                 </DrawerDescription>
               </DrawerHeader>
               <div className="p-4">
                 <SuccessContent />
               </div>
+              <DrawerClose asChild>
+                <Button className="mt-4 mx-4">Close</Button>
+              </DrawerClose>
             </DrawerContent>
           </Drawer>
         )}

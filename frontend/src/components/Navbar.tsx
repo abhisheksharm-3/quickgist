@@ -10,6 +10,7 @@ import {
   Button
 } from "@nextui-org/react";
 import { Link } from "react-router-dom";
+import { UserButton, SignedIn, SignedOut } from "@clerk/clerk-react";
 
 const NavbarComponent: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -37,7 +38,7 @@ const NavbarComponent: React.FC = () => {
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
         {menuItems.map((item, index) => (
           <NavbarItem key={`${item.name}-${index}`}>
-            <Link color="foreground" to={item.href}>
+            <Link to={item.href} className="text-foreground">
               {item.name}
             </Link>
           </NavbarItem>
@@ -46,9 +47,23 @@ const NavbarComponent: React.FC = () => {
 
       <NavbarContent justify="end">
         <NavbarItem>
-          <Button as={Link} color="primary" href="/create" variant="bordered">
-            Create Gist
-          </Button>
+          <Link to="/create">
+            <Button color="primary" variant="bordered">
+              Create Gist
+            </Button>
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+          <SignedOut>
+            <Link to="/sign-in">
+              <Button color="primary" variant="flat">
+                Sign In
+              </Button>
+            </Link>
+          </SignedOut>
         </NavbarItem>
       </NavbarContent>
 
@@ -56,9 +71,8 @@ const NavbarComponent: React.FC = () => {
         {menuItems.map((item, index) => (
           <NavbarMenuItem key={`${item.name}-${index}`}>
             <Link
-              color="foreground"
-              className="w-full"
               to={item.href}
+              className="w-full text-foreground"
             >
               {item.name}
             </Link>
