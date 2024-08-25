@@ -8,7 +8,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
 )
 
@@ -19,7 +18,7 @@ type application struct {
 }
 
 func main() {
-	err := godotenv.Load()
+	// err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
