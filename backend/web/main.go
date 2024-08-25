@@ -19,9 +19,9 @@ type application struct {
 
 func main() {
 	// err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 	addr := os.Getenv("PORT")
 	if addr == "" {
 		addr = ":8000" // Default value if not set
