@@ -25,6 +25,8 @@ func main() {
 	addr := os.Getenv("PORT")
 	if addr == "" {
 		addr = ":8000" // Default value if not set
+	} else {
+		addr = ":" + addr // Prepend ":" to the PORT value
 	}
 
 	serviceAccountPath := os.Getenv("FIREBASE_SA_PATH")
