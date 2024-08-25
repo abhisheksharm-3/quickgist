@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -63,7 +64,7 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 		Description string `json:"description"`
 		Content     string `json:"content"`
 		IsDraft     bool   `json:"isDraft"`
-		userId      string `json:"userId"`
+		UserId      string `json:"userId"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&input)
@@ -91,8 +92,8 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add userId to the document if it's provided
-	if input.userId != "" {
-		userSnippets["userId"] = input.userId
+	if input.UserId != "" {
+		userSnippets["userId"] = input.UserId
 	}
 	fmt.Println(input)
 
@@ -109,7 +110,7 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 		Content     string    `json:"content"`
 		IsDraft     bool      `json:"isDraft"`
 		CreatedAt   time.Time `json:"createdAt"`
-		userId      string    `json:"userId,omitempty"` // Include userId in response
+		UserId      string    `json:"userId,omitempty"` // Include userId in response
 	}{
 		SnippetId:   docRef.ID,
 		Title:       input.Title,
@@ -117,10 +118,46 @@ func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
 		Content:     input.Content,
 		IsDraft:     input.IsDraft,
 		CreatedAt:   userSnippets["createdAt"].(time.Time),
-		userId:      input.userId,
+		UserId:      input.UserId,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
+}
+func (app *application) userGists(w http.ResponseWriter, r *http.Request) {
+	userId := r.URL.Query().Get("userId")
+	if userId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+	iter := app.firestore.Collection("userSnippets").Where("userId", "==", userId).Documents(ctx)
+	var gists []map[string]interface{}
+
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
+		data := doc.Data()
+		gist := map[string]interface{}{
+			"snippetId":   doc.Ref.ID,
+			"title":       data["title"],
+			"description": data["description"],
+			"content":     data["content"],
+			"isDraft":     data["isDraft"],
+			"createdAt":   data["createdAt"],
+		}
+		gists = append(gists, gist)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(gists)
 }
