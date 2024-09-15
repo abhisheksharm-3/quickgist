@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: backend/web/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=${PORT}
+      - FIREBASE_SA_PATH=/app/firebase-secrets.json
+    volumes:
+      - ./firebase-secrets.json:/app/firebase-secrets.json:ro
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+        VITE_SERVER_URI: ${VITE_SERVER_URI}    # Pass the server URI as a build argument
+        VITE_FRONTEND_URI: ${VITE_FRONTEND_URI}
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_SERVER_URI=${VITE_SERVER_URI}      # Still keep this for runtime
+      - VITE_FRONTEND_URI=${VITE_FRONTEND_URI}
+      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+    depends_on:
+      - backend
