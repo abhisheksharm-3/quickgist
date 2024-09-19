@@ -18,5 +18,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/gist/create", app.gistCreate)
 	router.HandlerFunc(http.MethodGet, "/gist/user-gists", app.userGists)
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders, app.enableCORS)
+	router.HandlerFunc(http.MethodGet, "/health", app.healthCheck)
+	router.HandlerFunc(http.MethodHead, "/health", app.healthCheck)
 	return standard.Then(router)
 }

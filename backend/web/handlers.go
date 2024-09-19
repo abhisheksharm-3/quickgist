@@ -161,3 +161,22 @@ func (app *application) userGists(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(gists)
 }
+func (app *application) healthCheck(w http.ResponseWriter, r *http.Request) {
+	status := map[string]string{
+		"status":      "available",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == http.MethodHead {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(w).Encode(status)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
