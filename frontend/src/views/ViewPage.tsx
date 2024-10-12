@@ -1,14 +1,23 @@
-import { useParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { RiFileTextLine, RiTimeLine, RiFileCopyLine, RiCodeLine } from "@remixicon/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import Layout from "../components/Layout";
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { toast } from 'sonner';
-import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { FileText, Clock, Copy, Download } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Skeleton } from '../components/ui/skeleton';
+import Layout from '../components/Layout';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+
 
 export interface GistData {
   snippetId: string;
@@ -19,11 +28,11 @@ export interface GistData {
   createdAt: string;
 }
 
-const ViewPage = () => {
-  const { id } = useParams();
+const ViewPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const [gistData, setGistData] = useState<GistData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const fetchGistData = async () => {
@@ -31,9 +40,9 @@ const ViewPage = () => {
         setLoading(true);
         const response = await axios.get<GistData>(`${import.meta.env.VITE_SERVER_URI}/gist/view/${id}`);
         setGistData(response.data);
-        setLoading(false);
       } catch (err) {
         setError('Failed to fetch snippet data');
+      } finally {
         setLoading(false);
       }
     };
@@ -44,89 +53,158 @@ const ViewPage = () => {
   const copyToClipboard = () => {
     if (gistData) {
       navigator.clipboard.writeText(gistData.content);
-      toast.error("Copied to Clipboard", {
-        description: "You can use it now.",
-        style: {
-          background: "#2D3748",
-          border: "1px solid #4A5568",
-          color: "#FFFFFF",
-        },
+      toast.success('Copied to Clipboard', {
+        description: 'You can use it now.',
       });
     }
   };
 
-  if (loading) return <Layout><div className="flex justify-center items-center h-screen text-xl font-semibold">Loading...</div></Layout>;
-  if (error) return <Layout><div className="flex justify-center items-center h-screen text-xl font-semibold text-red-500">Error: {error}</div></Layout>;
-  if (!gistData) return <Layout><div className="flex justify-center items-center h-screen text-xl font-semibold">No data found</div></Layout>;
+  const downloadRaw = () => {
+    if (gistData) {
+      const blob = new Blob([gistData.content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${gistData.title}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  if (loading) return <LoadingSkeleton />;
+  if (error) return <ErrorDisplay message={error} />;
+  if (!gistData) return <ErrorDisplay message="No data found" />;
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 shadow-2xl">
-            <CardHeader className="border-b border-gray-700 p-8">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <CardTitle className="text-4xl font-bold text-blue-400 flex items-center mb-2">
-                    <RiFileTextLine className="mr-3 h-10 w-10" />
-                    {gistData.title}
-                  </CardTitle>
-                  <CardDescription className="text-gray-300 text-lg">
-                    {gistData.description}
-                  </CardDescription>
+      <motion.div
+        className="max-w-full sm:max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="bg-card overflow-hidden">
+          <CardHeader className="border-b space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="space-y-1 w-full">
+                <CardTitle className="text-xl sm:text-2xl md:text-3xl font-bold text-primary flex items-center gap-2 break-words">
+                  <FileText className="h-6 w-6 flex-shrink-0" />
+                  <span className="break-words">{gistData.title}</span>
+                </CardTitle>
+                <CardDescription className="text-muted-foreground text-sm sm:text-base break-words">
+                  {gistData.description}
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                      Options
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={downloadRaw}>
+                      <Download className="mr-2 h-4 w-4" /> Download
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <Clock className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <time dateTime={gistData.createdAt}>
+                {new Date(gistData.createdAt).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </time>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Tabs defaultValue="preview" className="w-full">
+              <TabsList className="w-full justify-start rounded-none border-b">
+                <TabsTrigger value="preview" className="data-[state=active]:bg-background">Preview</TabsTrigger>
+                <TabsTrigger value="raw" className="data-[state=active]:bg-background">Raw</TabsTrigger>
+              </TabsList>
+              <TabsContent value="preview" className="m-0">
+                <div className="relative">
+                  <div className="absolute top-2 right-2 z-10">
+                    <Button
+                      onClick={copyToClipboard}
+                      variant="secondary"
+                      size="sm"
+                      className="h-8 text-xs"
+                    >
+                      <Copy className="mr-1 h-3 w-3" /> Copy
+                    </Button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <SyntaxHighlighter
+                      language="javascript"
+                      style={atomDark}
+                      customStyle={{
+                        margin: 0,
+                        borderRadius: 0,
+                        padding: '2rem 1rem',
+                        fontSize: '0.875rem',
+                        lineHeight: 1.5,
+                      }}
+                      showLineNumbers
+                      wrapLines={true}
+                      wrapLongLines={true}
+                    >
+                      {gistData.content}
+                    </SyntaxHighlighter>
+                  </div>
                 </div>
-                <Button 
-                  onClick={copyToClipboard}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-all duration-200 ease-in-out transform hover:scale-105"
-                >
-                  <RiFileCopyLine className="mr-2 h-5 w-5" /> Copy Code
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="flex justify-between items-center text-gray-300 mb-6">
-                <div className="flex items-center text-lg">
-                  <RiTimeLine className="mr-2 h-6 w-6" />
-                  <span>{new Date(gistData.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                </div>
-              </div>
-              <div className="rounded-lg overflow-hidden shadow-lg">
-                <div className="bg-gray-800 text-gray-300 px-4 py-2 flex items-center">
-                  <RiCodeLine className="mr-2" />
-                  <span className="font-semibold">Snippet</span>
-                </div>
-                <SyntaxHighlighter 
-                  language="javascript" 
-                  style={atomDark}
-                  customStyle={{
-                    margin: 0,
-                    padding: '1.5rem',
-                    fontSize: '1rem',
-                    lineHeight: '1.6',
-                    borderRadius: '0 0 0.5rem 0.5rem',
-                  }}
-                >
-                  {gistData.content}
-                </SyntaxHighlighter>
-              </div>
-              <div className="mt-8 flex justify-end items-center">
-                <Button variant="outline" className="mr-4 text-blue-400 hover:text-blue-300 hover:bg-blue-900 border-blue-400 hover:border-blue-300 transition-all duration-200">
-                  Raw
-                </Button>
-                <Button variant="outline" className="text-blue-400 hover:text-blue-300 hover:bg-blue-900 border-blue-400 hover:border-blue-300 transition-all duration-200">
-                  Download
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+              </TabsContent>
+              <TabsContent value="raw" className="m-0">
+                <pre className="bg-muted p-4 rounded-b-lg overflow-x-auto whitespace-pre-wrap break-words text-sm">
+                  <code>{gistData.content}</code>
+                </pre>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </motion.div>
     </Layout>
   );
 };
+
+const LoadingSkeleton: React.FC = () => (
+  <Layout>
+    <div className="max-w-full sm:max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <Card>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="space-y-2 w-full">
+              <Skeleton className="h-6 sm:h-8 w-full sm:w-3/4" />
+              <Skeleton className="h-4 w-full sm:w-1/2" />
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto justify-end">
+              <Skeleton className="h-8 w-16 sm:w-20" />
+              <Skeleton className="h-8 w-16 sm:w-20" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-32 sm:w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] sm:h-[400px] w-full" />
+        </CardContent>
+      </Card>
+    </div>
+  </Layout>
+);
+
+const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => (
+  <Layout>
+    <div className="flex justify-center items-center h-[calc(100vh-4rem)] text-xl font-semibold text-red-500">
+      {message}
+    </div>
+  </Layout>
+);
 
 export default ViewPage;
