@@ -15,38 +15,43 @@ export const useGistSubmission = (isAnonymous: boolean, userId?: string) => {
     isDraft: boolean,
     title: string,
     description: string,
-    content: string
+    content: string,
+    file?: File
   ): Promise<void> => {
     setIsSubmitting(true);
     try {
-      const sanitizedData: Omit<GistData, "snippetId"> = {
-        title: sanitizeInput(title),
-        description: sanitizeInput(description),
-        content: content,
-        isDraft,
-        userId: isAnonymous ? undefined : userId,
-      };
+      const formData = new FormData();
+      formData.append("title", sanitizeInput(title));
+      formData.append("description", sanitizeInput(description));
+      formData.append("content", content);
+      formData.append("isDraft", isDraft.toString());
+      if (!isAnonymous && userId) {
+        formData.append("userId", userId);
+      }
+      if (file) {
+        formData.append("file", file);
+      }
       
-      console.log("Submitting gist with data:", sanitizedData);
+      console.log("Submitting gist with data:", Object.fromEntries(formData));
       console.log("isAnonymous:", isAnonymous);
       console.log("userId:", userId);
 
       const response = await axios.post<GistData>(
         `${import.meta.env.VITE_SERVER_URI}/gist/create`,
-        sanitizedData,
+        formData,
         {
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
           withCredentials: true,
         }
       );
 
       setSubmittedGist(response.data);
-      toast.success("Gist created successfully!");
+      toast.success(file ? "Gist with File uploaded successfully!" : "Gist created successfully!");
     } catch (error) {
       console.error("Error submitting gist:", error);
-      toast.error("Failed to create a Gist", {
+      toast.error(file ? "Failed to upload file" : "Failed to create a Gist", {
         description: "Please try again later.",
         style: {
           background: "#2D3748",
