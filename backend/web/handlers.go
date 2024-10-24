@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"github.com/julienschmidt/httprouter"
 	"google.golang.org/api/iterator"
@@ -17,20 +21,54 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Constants
+const (
+	maxFileSize    = 10 << 20 // 10 MB
+	maxContentSize = 1 << 20  // 1 MB
+	bucketName     = "quickgists.appspot.com"
+	fileURLPattern = "/files/%s/%s"
+)
+
+// Response types
+type GistResponse struct {
+	SnippetID   string    `json:"snippetId"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Content     string    `json:"content"`
+	IsDraft     bool      `json:"isDraft"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UserID      string    `json:"userId,omitempty"`
+	FileName    string    `json:"fileName,omitempty"`
+	FileURL     string    `json:"fileURL,omitempty"`
+}
+
+// Custom errors
+var (
+	ErrInvalidRequest = errors.New("invalid request parameters")
+	ErrUnauthorized   = errors.New("unauthorized access")
+	ErrNotFound       = errors.New("resource not found")
+)
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello from QuickGist!"))
+	app.respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Hello from QuickGist!",
+		"version": "2.0.0",
+	})
 }
 
 func (app *application) gistView(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
-	snippetId := params.ByName("id")
-	if snippetId == "" {
+	ctx := r.Context()
+	params := httprouter.ParamsFromContext(ctx)
+	snippetID := params.ByName("id")
+
+	if snippetID == "" {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	ctx := context.Background()
-	doc, err := app.firestore.Collection("userSnippets").Doc(snippetId).Get(ctx)
+	// Sanitize the snippet ID
+	snippetID = strings.TrimSpace(snippetID)
+	doc, err := app.firestore.Collection("userSnippets").Doc(snippetID).Get(ctx)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			app.notFound(w)
@@ -41,62 +79,45 @@ func (app *application) gistView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := doc.Data()
-	response := struct {
-		SnippetId   string    `json:"snippetId"`
-		Title       string    `json:"title"`
-		Description string    `json:"description"`
-		Content     string    `json:"content"`
-		IsDraft     bool      `json:"isDraft"`
-		CreatedAt   time.Time `json:"createdAt"`
-		UserId      string    `json:"userId,omitempty"`
-		FileName    string    `json:"fileName,omitempty"`
-		FileURL     string    `json:"fileURL,omitempty"`
-	}{
-		SnippetId:   snippetId,
-		Title:       fmt.Sprintf("%v", data["title"]),
-		Description: fmt.Sprintf("%v", data["description"]),
-		Content:     fmt.Sprintf("%v", data["content"]),
+	response := GistResponse{
+		SnippetID:   snippetID,
+		Title:       app.sanitizeString(data["title"]),
+		Description: app.sanitizeString(data["description"]),
+		Content:     app.sanitizeString(data["content"]),
 		IsDraft:     data["isDraft"].(bool),
 		CreatedAt:   data["createdAt"].(time.Time),
 	}
 
-	// Add optional fields if they exist
-	if userId, ok := data["userId"].(string); ok {
-		response.UserId = userId
+	if userID, ok := data["userId"].(string); ok {
+		response.UserID = userID
 	}
 	if fileName, ok := data["fileName"].(string); ok {
 		response.FileName = fileName
 	}
-
-	// Use public URL if available, otherwise construct it
 	if publicFileURL, ok := data["publicFileURL"].(string); ok {
 		response.FileURL = publicFileURL
-	} else if _, ok := data["fileName"].(string); ok {
-		// Fallback for older entries that don't have publicFileURL
-		response.FileURL = fmt.Sprintf("/files/%s/%s",
-			snippetId,
-			url.PathEscape(data["fileName"].(string)))
+	} else if response.FileName != "" {
+		response.FileURL = fmt.Sprintf(fileURLPattern,
+			snippetID,
+			url.PathEscape(response.FileName))
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	app.respondJSON(w, http.StatusOK, response)
 }
+
 func (app *application) serveFile(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
-	snippetId := params.ByName("snippetId")
+	ctx := r.Context()
+	params := httprouter.ParamsFromContext(ctx)
+	snippetID := params.ByName("snippetId")
 	filepath := params.ByName("filepath")
 
-	// Remove leading slash from filepath
-	filepath = strings.TrimPrefix(filepath, "/")
-
-	if snippetId == "" || filepath == "" {
+	filepath = path.Clean(strings.TrimPrefix(filepath, "/"))
+	if snippetID == "" || filepath == "" {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	// Get the snippet to verify it exists and get the real file URL
-	ctx := r.Context()
-	doc, err := app.firestore.Collection("userSnippets").Doc(snippetId).Get(ctx)
+	doc, err := app.firestore.Collection("userSnippets").Doc(snippetID).Get(ctx)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			app.notFound(w)
@@ -113,189 +134,149 @@ func (app *application) serveFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch the file from Firebase
-	resp, err := http.Get(fileURL)
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fileURL, nil)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 	defer resp.Body.Close()
 
-	// Copy the content type
-	contentType := resp.Header.Get("Content-Type")
-	if contentType != "" {
-		w.Header().Set("Content-Type", contentType)
+	if resp.StatusCode != http.StatusOK {
+		app.serverError(w, fmt.Errorf("failed to fetch file: %d", resp.StatusCode))
+		return
 	}
 
-	// Set filename for download if present in original response
+	// Set security headers
+	w.Header().Set("Content-Security-Policy", "default-src 'self'")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+
+	// Copy content type and disposition
+	if ct := resp.Header.Get("Content-Type"); ct != "" {
+		w.Header().Set("Content-Type", ct)
+	}
 	if cd := resp.Header.Get("Content-Disposition"); cd != "" {
 		w.Header().Set("Content-Disposition", cd)
+	} else {
+		// Set a default content disposition if none provided
+		w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=%q", filepath))
 	}
 
-	// Copy the file to the response
+	// Set caching headers
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	w.Header().Set("ETag", resp.Header.Get("ETag"))
+	w.Header().Set("Last-Modified", resp.Header.Get("Last-Modified"))
+
+	// Copy the Content-Length header if available
+	if cl := resp.Header.Get("Content-Length"); cl != "" {
+		w.Header().Set("Content-Length", cl)
+	}
+
+	// Stream the file content
+	w.WriteHeader(http.StatusOK)
 	_, err = io.Copy(w, resp.Body)
 	if err != nil {
-		app.serverError(w, err)
-		return
+		// Log the error but don't send it to the client as we've already started sending the response
+		app.errorLog.Printf("Error streaming file: %v", err)
 	}
 }
+
 func (app *application) gistCreate(w http.ResponseWriter, r *http.Request) {
-	// Parse the multipart form data
-	err := r.ParseMultipartForm(10 << 20) // 10 MB max
-	if err != nil {
+	ctx := r.Context()
+
+	// Limit request size and parse form
+	r.Body = http.MaxBytesReader(w, r.Body, maxFileSize)
+	if err := r.ParseMultipartForm(maxFileSize); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	defer r.MultipartForm.RemoveAll()
 
-	title := r.FormValue("title")
-	description := r.FormValue("description")
-	content := r.FormValue("content")
+	// Validate input
+	title := strings.TrimSpace(r.FormValue("title"))
+	description := strings.TrimSpace(r.FormValue("description"))
+	content := strings.TrimSpace(r.FormValue("content"))
 	isDraft := r.FormValue("isDraft") == "true"
-	userId := r.FormValue("userId")
+	userID := strings.TrimSpace(r.FormValue("userId"))
 
-	if title == "" || content == "" {
+	if title == "" || content == "" || len(content) > maxContentSize {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	ctx := context.Background()
-
-	// Generate a new document ID
+	// Create new document
 	docRef := app.firestore.Collection("userSnippets").NewDoc()
-
-	userSnippets := map[string]interface{}{
+	gist := map[string]interface{}{
 		"title":       title,
 		"description": description,
 		"content":     content,
 		"isDraft":     isDraft,
-		"createdAt":   time.Now(),
+		"createdAt":   time.Now().UTC(),
 	}
 
-	// Add userId to the document if it's provided
-	if userId != "" {
-		userSnippets["userId"] = userId
+	if userID != "" {
+		gist["userId"] = userID
 	}
 
-	// Handle file upload
-	file, header, err := r.FormFile("file")
-	if err == nil {
-		defer file.Close()
-
-		// Initialize Firebase app if not already done
-		config := &firebase.Config{
-			StorageBucket: "quickgists.appspot.com",
-		}
-		firebaseApp, err := firebase.NewApp(ctx, config)
-		if err != nil {
+	// Handle file upload if present
+	if file, header, err := r.FormFile("file"); err == nil {
+		if err := app.handleFileUpload(ctx, file, header, docRef.ID, gist); err != nil {
 			app.serverError(w, err)
 			return
 		}
-
-		// Get Firebase Storage client
-		client, err := firebaseApp.Storage(ctx)
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
-
-		// Get bucket handle
-		bucket, err := client.DefaultBucket()
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
-
-		// Create a unique filename
-		filename := fmt.Sprintf("quickgist-user-files/%s/%s", docRef.ID, header.Filename)
-		obj := bucket.Object(filename)
-
-		// Create a new storage object writer
-		writer := obj.NewWriter(ctx)
-
-		// Copy the file data to the object
-		if _, err := io.Copy(writer, file); err != nil {
-			app.serverError(w, err)
-			return
-		}
-
-		// Close the writer
-		if err := writer.Close(); err != nil {
-			app.serverError(w, err)
-			return
-		}
-
-		// Get the object attributes
-		attrs, err := obj.Attrs(ctx)
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
-
-		// Construct the Firebase Storage URL
-		fileURL := fmt.Sprintf("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?generation=%d&alt=media",
-			"quickgists.appspot.com",
-			url.QueryEscape(filename),
-			attrs.Generation)
-
-		// Create proxy URL
-		proxyURL := fmt.Sprintf("/files/%s/%s",
-			docRef.ID,
-			url.PathEscape(header.Filename))
-
-		// Store both URLs and filename
-		userSnippets["fileName"] = header.Filename
-		userSnippets["fileURL"] = fileURL        // Original Firebase URL (for internal use)
-		userSnippets["publicFileURL"] = proxyURL // Public URL for clients
 	}
 
-	_, err = docRef.Set(ctx, userSnippets)
-	if err != nil {
+	// Save to Firestore
+	if _, err := docRef.Set(ctx, gist); err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	response := struct {
-		SnippetId   string    `json:"snippetId"`
-		Title       string    `json:"title"`
-		Description string    `json:"description"`
-		Content     string    `json:"content"`
-		IsDraft     bool      `json:"isDraft"`
-		CreatedAt   time.Time `json:"createdAt"`
-		UserId      string    `json:"userId,omitempty"`
-		FileName    string    `json:"fileName,omitempty"`
-		FileURL     string    `json:"fileURL,omitempty"`
-	}{
-		SnippetId:   docRef.ID,
+	// Prepare response
+	response := GistResponse{
+		SnippetID:   docRef.ID,
 		Title:       title,
 		Description: description,
 		Content:     content,
 		IsDraft:     isDraft,
-		CreatedAt:   userSnippets["createdAt"].(time.Time),
-		UserId:      userId,
+		CreatedAt:   gist["createdAt"].(time.Time),
+		UserID:      userID,
 	}
 
-	if fileName, ok := userSnippets["fileName"].(string); ok {
+	if fileName, ok := gist["fileName"].(string); ok {
 		response.FileName = fileName
 	}
-	if publicFileURL, ok := userSnippets["publicFileURL"].(string); ok {
+	if publicFileURL, ok := gist["publicFileURL"].(string); ok {
 		response.FileURL = publicFileURL
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	app.respondJSON(w, http.StatusCreated, response)
 }
+
 func (app *application) userGists(w http.ResponseWriter, r *http.Request) {
-	userId := r.URL.Query().Get("userId")
-	if userId == "" {
+	ctx := r.Context()
+	userID := strings.TrimSpace(r.URL.Query().Get("userId"))
+
+	if userID == "" {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	ctx := context.Background()
-	iter := app.firestore.Collection("userSnippets").Where("userId", "==", userId).Documents(ctx)
-	var gists []map[string]interface{}
+	iter := app.firestore.Collection("userSnippets").
+		Where("userId", "==", userID).
+		OrderBy("createdAt", firestore.Desc).
+		Limit(100).
+		Documents(ctx)
 
+	var gists []GistResponse
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -307,23 +288,21 @@ func (app *application) userGists(w http.ResponseWriter, r *http.Request) {
 		}
 
 		data := doc.Data()
-		gist := map[string]interface{}{
-			"snippetId":   doc.Ref.ID,
-			"title":       data["title"],
-			"description": data["description"],
-			"content":     data["content"],
-			"isDraft":     data["isDraft"],
-			"createdAt":   data["createdAt"],
+		gist := GistResponse{
+			SnippetID:   doc.Ref.ID,
+			Title:       app.sanitizeString(data["title"]),
+			Description: app.sanitizeString(data["description"]),
+			Content:     app.sanitizeString(data["content"]),
+			IsDraft:     data["isDraft"].(bool),
+			CreatedAt:   data["createdAt"].(time.Time),
 		}
 
-		// Add file information if it exists
 		if fileName, ok := data["fileName"].(string); ok {
-			gist["fileName"] = fileName
-			// Use public URL if available, otherwise construct it
+			gist.FileName = fileName
 			if publicFileURL, ok := data["publicFileURL"].(string); ok {
-				gist["fileURL"] = publicFileURL
+				gist.FileURL = publicFileURL
 			} else {
-				gist["fileURL"] = fmt.Sprintf("/files/%s/%s",
+				gist.FileURL = fmt.Sprintf(fileURLPattern,
 					doc.Ref.ID,
 					url.PathEscape(fileName))
 			}
@@ -332,25 +311,98 @@ func (app *application) userGists(w http.ResponseWriter, r *http.Request) {
 		gists = append(gists, gist)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(gists)
+	app.respondJSON(w, http.StatusOK, gists)
 }
-func (app *application) healthCheck(w http.ResponseWriter, r *http.Request) {
-	status := map[string]string{
-		"status": "available",
-	}
 
-	w.Header().Set("Content-Type", "application/json")
+func (app *application) healthCheck(w http.ResponseWriter, r *http.Request) {
+	status := struct {
+		Status    string `json:"status"`
+		Timestamp string `json:"timestamp"`
+		Version   string `json:"version"`
+	}{
+		Status:    "available",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Version:   "1.0.0",
+	}
 
 	if r.Method == http.MethodHead {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(status)
-	if err != nil {
-		app.serverError(w, err)
-		return
+	app.respondJSON(w, http.StatusOK, status)
+}
+
+// Helper methods
+func (app *application) handleFileUpload(ctx context.Context, file io.ReadCloser, header *multipart.FileHeader, docID string, gist map[string]interface{}) error {
+	defer file.Close()
+
+	if header.Size > maxFileSize {
+		return ErrInvalidRequest
 	}
+
+	config := &firebase.Config{
+		StorageBucket: bucketName,
+	}
+	firebaseApp, err := firebase.NewApp(ctx, config)
+	if err != nil {
+		return err
+	}
+
+	client, err := firebaseApp.Storage(ctx)
+	if err != nil {
+		return err
+	}
+
+	bucket, err := client.DefaultBucket()
+	if err != nil {
+		return err
+	}
+
+	filename := fmt.Sprintf("quickgist-user-files/%s/%s", docID, header.Filename)
+	obj := bucket.Object(filename)
+	writer := obj.NewWriter(ctx)
+
+	if _, err := io.Copy(writer, file); err != nil {
+		writer.Close()
+		return err
+	}
+
+	if err := writer.Close(); err != nil {
+		return err
+	}
+
+	attrs, err := obj.Attrs(ctx)
+	if err != nil {
+		return err
+	}
+
+	fileURL := fmt.Sprintf("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?generation=%d&alt=media",
+		bucketName,
+		url.QueryEscape(filename),
+		attrs.Generation)
+
+	proxyURL := fmt.Sprintf(fileURLPattern,
+		docID,
+		url.PathEscape(header.Filename))
+
+	gist["fileName"] = header.Filename
+	gist["fileURL"] = fileURL
+	gist["publicFileURL"] = proxyURL
+
+	return nil
+}
+
+func (app *application) respondJSON(w http.ResponseWriter, status int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(data)
+}
+
+func (app *application) sanitizeString(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	return strings.TrimSpace(fmt.Sprintf("%v", v))
 }
