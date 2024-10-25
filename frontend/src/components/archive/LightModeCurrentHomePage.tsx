@@ -9,18 +9,18 @@ import {
   Upload,
   FileUp,
 } from "lucide-react";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
 import { Link } from "react-router-dom";
-import Layout from "../components/Layout";
+import Layout from "../Layout";
 
 const HomePage = () => {
   return (
     <Layout>
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen bg-yellow-50">
         {/* Brutalist pattern background */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_20px,#222_20px,#222_21px)]" />
+          <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_20px,#000_20px,#000_21px)]" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -39,10 +39,10 @@ const UpdateBanner = () => (
     animate={{ x: 0 }}
     className="mb-12"
   >
-    <div className="bg-cyan-500 border-4 border-cyan-400 p-4 shadow-[8px_8px_0px_0px_rgba(0,255,255,0.3)] 
+    <div className="bg-lime-400 border-4 border-black p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] 
                     flex items-center justify-center gap-3 transform -rotate-1">
-      <div className="bg-zinc-950 border-4 border-cyan-400 p-2">
-        <FileUp className="h-6 w-6 text-cyan-400" />
+      <div className="bg-white border-4 border-black p-2">
+        <FileUp className="h-6 w-6" />
       </div>
       <p className="text-black font-mono font-bold text-lg">
         NEW UPDATE: Enhanced file sharing just dropped!
@@ -67,9 +67,9 @@ const HeroSection = () => {
           onMouseLeave={() => setIsHovered(false)}
         >
           <motion.div
-            className="text-5xl md:text-9xl font-black tracking-tight bg-zinc-950 
-                     border-8 border-pink-500 px-8 py-4 rotate-2
-                     shadow-[12px_12px_0px_0px_rgba(236,72,153,0.3)]"
+            className="text-8xl md:text-9xl font-black tracking-tight bg-white 
+                     border-8 border-black px-8 py-4 rotate-2
+                     shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
             animate={{
               rotate: isHovered ? -2 : 2,
               transition: { duration: 0.3 }
@@ -84,9 +84,9 @@ const HeroSection = () => {
         <motion.h2
           initial={{ x: -1000 }}
           animate={{ x: 0 }}
-          className="text-3xl md:text-4xl font-black mb-6 bg-zinc-950 text-blue-400 
-                   border-4 border-blue-500 p-4 inline-block -rotate-1
-                   shadow-[8px_8px_0px_0px_rgba(59,130,246,0.3)]"
+          className="text-3xl md:text-4xl font-black mb-6 bg-blue-400 text-black 
+                   border-4 border-black p-4 inline-block -rotate-1
+                   shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
         >
           Simple, secure file sharing
         </motion.h2>
@@ -94,9 +94,9 @@ const HeroSection = () => {
         <motion.p
           initial={{ x: 1000 }}
           animate={{ x: 0 }}
-          className="text-xl mb-10 max-w-2xl mx-auto bg-zinc-950 font-mono text-zinc-300
-                   border-4 border-purple-500 p-6 rotate-1
-                   shadow-[8px_8px_0px_0px_rgba(168,85,247,0.3)]"
+          className="text-xl mb-10 max-w-2xl mx-auto bg-white font-mono
+                   border-4 border-black p-6 rotate-1
+                   shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
         >
           Share any file type instantly with our streamlined sharing system.
           Fast uploads, broad compatibility, and robust security.
@@ -110,10 +110,10 @@ const HeroSection = () => {
           <Button
             size="lg"
             className="bg-pink-500 hover:bg-pink-600 text-white text-xl font-black
-                     border-4 border-pink-400 px-8 py-8
-                     shadow-[8px_8px_0px_0px_rgba(236,72,153,0.3)]
+                     border-4 border-black px-8 py-8
+                     shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]
                      hover:translate-x-1 hover:translate-y-1
-                     hover:shadow-[4px_4px_0px_0px_rgba(236,72,153,0.3)]
+                     hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
                      transition-all duration-200 group"
             asChild
           >
@@ -136,40 +136,28 @@ const FeaturesSection = () => {
         icon: <Rocket className="h-8 w-8" />,
         title: "Fast Uploads",
         description: "Quick and efficient file transfer system.",
-        bgColor: "bg-zinc-950",
-        borderColor: "border-orange-500",
-        textColor: "text-orange-400",
-        shadowColor: "rgba(249,115,22,0.3)",
+        bgColor: "bg-orange-400",
         rotation: "rotate-2"
       },
       {
         icon: <Shield className="h-8 w-8" />,
         title: "Secure Systems",
         description: "End-to-end encryption for your files.",
-        bgColor: "bg-zinc-950",
-        borderColor: "border-green-500",
-        textColor: "text-green-400",
-        shadowColor: "rgba(34,197,94,0.3)",
+        bgColor: "bg-lime-400",
         rotation: "-rotate-1"
       },
       {
         icon: <Network className="h-8 w-8" />,
         title: "Global Network",
         description: "Fast access from anywhere.",
-        bgColor: "bg-zinc-950",
-        borderColor: "border-cyan-500",
-        textColor: "text-cyan-400",
-        shadowColor: "rgba(34,211,238,0.3)",
+        bgColor: "bg-cyan-400",
         rotation: "rotate-1"
       },
       {
         icon: <FileCode2 className="h-8 w-8" />,
         title: "File Support",
         description: "Compatible with all common file types.",
-        bgColor: "bg-zinc-950",
-        borderColor: "border-purple-500",
-        textColor: "text-purple-400",
-        shadowColor: "rgba(168,85,247,0.3)",
+        bgColor: "bg-purple-400",
         rotation: "-rotate-2"
       },
     ],
@@ -195,9 +183,6 @@ interface FeatureCardProps {
   title: string;
   description: string;
   bgColor: string;
-  borderColor: string;
-  textColor: string;
-  shadowColor: string;
   rotation: string;
   index: number;
 }
@@ -207,9 +192,6 @@ const FeatureCard = ({
   title,
   description,
   bgColor,
-  borderColor,
-  textColor,
-  shadowColor,
   rotation,
   index
 }: FeatureCardProps) => {
@@ -222,22 +204,20 @@ const FeatureCard = ({
       className={`${rotation}`}
     >
       <Card
-        className={`${bgColor} ${borderColor} border-4 p-6
-                  shadow-[8px_8px_0px_0px_${shadowColor}]
+        className={`${bgColor} border-4 border-black p-6
+                  shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]
                   hover:translate-x-1 hover:translate-y-1
-                  hover:shadow-[4px_4px_0px_0px_${shadowColor}]
+                  hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
                   transition-all duration-200`}
       >
         <div className="flex flex-col h-full">
-          <div className={`bg-zinc-950 ${borderColor} border-4 p-4 w-fit mb-4`}>
-            <div className={textColor}>
-              {icon}
-            </div>
+          <div className="bg-white border-4 border-black p-4 w-fit mb-4">
+            {icon}
           </div>
-          <h3 className={`text-2xl font-black mb-2 font-mono ${textColor}`}>
+          <h3 className="text-2xl font-black mb-2 font-mono">
             {title}
           </h3>
-          <p className="text-lg font-mono text-zinc-400">{description}</p>
+          <p className="text-lg font-mono">{description}</p>
         </div>
       </Card>
     </motion.div>
