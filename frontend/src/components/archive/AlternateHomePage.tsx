@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Rocket,
   Shield,
@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Upload,
   FileUp,
-  Star
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
