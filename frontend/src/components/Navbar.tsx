@@ -29,7 +29,7 @@ const NavbarComponent = () => {
   }, [isMenuOpen]);
 
   return (
-    <nav className="relative z-50 bg-zinc-950 border-b-4 border-pink-500 p-4">
+    <nav className="relative z-50 bg-zinc-950 border-b-4 border-pink-500 p-4 w-full">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
           {/* Mobile menu button */}
