@@ -88,7 +88,7 @@ const HeroSection = () => {
                    border-4 border-blue-500 p-4 inline-block -rotate-1
                    shadow-[8px_8px_0px_0px_rgba(59,130,246,0.3)]"
         >
-          Simple, secure file sharing
+          Code snippets & file sharing made simple
         </motion.h2>
 
         <motion.p
@@ -98,8 +98,9 @@ const HeroSection = () => {
                    border-4 border-purple-500 p-6 rotate-1
                    shadow-[8px_8px_0px_0px_rgba(168,85,247,0.3)]"
         >
-          Share any file type instantly with our streamlined sharing system.
-          Fast uploads, broad compatibility, and robust security.
+          Share code snippets with syntax highlighting or any type of file instantly.
+          Perfect for developers, teams, and anyone who needs to share content quickly.
+          No account required.
         </motion.p>
 
         <motion.div
@@ -134,8 +135,8 @@ const FeaturesSection = () => {
     () => [
       {
         icon: <Rocket className="h-8 w-8" />,
-        title: "Fast Uploads",
-        description: "Quick and efficient file transfer system.",
+        title: "Fast Servers",
+        description: "Powered by Go & distributed edge servers.",
         bgColor: "bg-zinc-950",
         borderColor: "border-orange-500",
         textColor: "text-orange-400",
@@ -145,7 +146,7 @@ const FeaturesSection = () => {
       {
         icon: <Shield className="h-8 w-8" />,
         title: "Secure Systems",
-        description: "End-to-end encryption for your files.",
+        description: "Your data always stays secure.",
         bgColor: "bg-zinc-950",
         borderColor: "border-green-500",
         textColor: "text-green-400",
@@ -164,7 +165,7 @@ const FeaturesSection = () => {
       },
       {
         icon: <FileCode2 className="h-8 w-8" />,
-        title: "File Support",
+        title: "Universal Support",
         description: "Compatible with all common file types.",
         bgColor: "bg-zinc-950",
         borderColor: "border-purple-500",
