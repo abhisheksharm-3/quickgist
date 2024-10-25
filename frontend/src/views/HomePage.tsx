@@ -17,7 +17,7 @@ import Layout from "../components/Layout";
 const HomePage = () => {
   return (
     <Layout>
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen bg-zinc-950">
         {/* Brutalist pattern background */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_20px,#222_20px,#222_21px)]" />

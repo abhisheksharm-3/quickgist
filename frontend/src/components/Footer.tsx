@@ -28,7 +28,7 @@ const navigation: {
     },
     {
       name: 'GitHub',
-      href: 'https://github.com/',
+      href: 'https://github.com/abhisheksharm-3',
       icon: (props: React.SVGProps<SVGSVGElement>) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path
@@ -41,7 +41,7 @@ const navigation: {
     },
     {
       name: 'LinkedIn',
-      href: 'https://linkedin.com/in/',
+      href: 'https://linkedin.com/in/abhisheksan',
       icon: (props: React.SVGProps<SVGSVGElement>) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path
@@ -57,37 +57,65 @@ const navigation: {
 
 const Footer: React.FC = () => {
   return (
-    <footer className="w-full z-0">
-      <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <nav className="flex flex-wrap justify-center">
-          {navigation.main.map((item) => (
-            <div key={item.name} className="px-5 py-2">
+    <footer className="w-full bg-zinc-950 border-t-4 border-pink-500">
+      <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:px-8 flex flex-col items-center">
+        {/* Main Navigation */}
+        <nav className="flex flex-wrap justify-center gap-4">
+          {navigation.main.map((item, index) => (
+            <div 
+              key={item.name} 
+              className={`transform ${index % 2 === 0 ? 'rotate-2' : '-rotate-2'}`}
+            >
               <a
                 href={item.href}
-                className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-100"
+                className="inline-block bg-yellow-400 text-black font-mono font-bold px-4 py-2
+                         border-4 border-yellow-300
+                         shadow-[4px_4px_0px_0px_rgba(250,204,21,0.3)]
+                         hover:translate-x-1 hover:translate-y-1
+                         hover:shadow-[2px_2px_0px_0px_rgba(250,204,21,0.3)]
+                         transition-all duration-200"
               >
                 {item.name}
               </a>
             </div>
           ))}
         </nav>
-        <div className="mt-5 flex justify-center space-x-6">
-          {navigation.social.map((item) => (
+
+        {/* Social Links */}
+        <div className="mt-8 flex justify-center gap-6">
+          {navigation.social.map((item, index) => (
             <a
               key={item.name}
               href={item.href}
-              className="text-gray-600 hover:text-gray-800 dark:text-gray-100"
+              className={`transform ${index % 2 === 0 ? 'rotate-3' : '-rotate-3'}
+                         bg-blue-500 p-3
+                         border-4 border-blue-400
+                         shadow-[4px_4px_0px_0px_rgba(59,130,246,0.3)]
+                         hover:translate-x-1 hover:translate-y-1
+                         hover:shadow-[2px_2px_0px_0px_rgba(59,130,246,0.3)]
+                         transition-all duration-200`}
             >
               <span className="sr-only">{item.name}</span>
               {item.icon && (
-                <item.icon className="h-5 w-5" aria-hidden="true" />
+                <item.icon 
+                  className="h-6 w-6 text-white" 
+                  aria-hidden="true" 
+                />
               )}
             </a>
           ))}
         </div>
-        <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-100">
-          &copy; {new Date().getFullYear()} QuickGist. All rights reserved.
-        </p>
+
+        {/* Copyright */}
+        <div className="mt-8 transform -rotate-1">
+          <div className="inline-block bg-purple-500 px-4 py-2
+                         border-4 border-purple-400
+                         shadow-[4px_4px_0px_0px_rgba(168,85,247,0.3)]">
+            <p className="text-center font-mono font-bold text-white">
+              &copy; {new Date().getFullYear()} QuickGist. All rights reserved.
+            </p>
+          </div>
+        </div>
       </div>
     </footer>
   )
