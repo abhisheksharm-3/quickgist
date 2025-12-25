@@ -1,30 +1,59 @@
-# React + TypeScript + Vite
+# QuickGist Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern React frontend for QuickGist - a fast snippet sharing service.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Animated hero with ColorBends background
+- Glassmorphism navbar
+- Form validation with react-hook-form + zod
+- React Query for data fetching
+- Clerk authentication
+- Responsive design with mobile-first approach
 
-## Expanding the ESLint configuration
+## 🛠️ Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **React 19** with TypeScript
+- **Vite** for blazing fast dev
+- **Tailwind CSS** for styling
+- **shadcn/ui** for components
+- **React Query** for server state
+- **Clerk** for auth
 
-- Configure the top-level `parserOptions` property like this:
+## 🚀 Quick Start
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```bash
+# Install dependencies
+bun install
+
+# Start dev server
+bun dev
+
+# Build for production
+bun run build
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## 📁 Structure
+
+```
+src/
+├── app/           # App entry, providers, router
+├── pages/         # Route pages
+├── components/    # UI and layout components
+├── lib/           # API client, utilities
+└── types/         # TypeScript types
+```
+
+## 🎨 Design System
+
+- **Colors**: Amber Warmth theme
+- **Borders**: Sharp 2px borders
+- **Typography**: Google Sans
+- **Animations**: Subtle, purposeful
+
+## 📝 Environment
+
+```env
+VITE_SERVER_URI=http://localhost:3000
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+```

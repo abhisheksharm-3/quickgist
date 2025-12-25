@@ -1,6 +1,8 @@
 module github.com/abhisheksharm-3/quickgist
 
-go 1.22.3
+go 1.24.0
+
+toolchain go1.24.6
 
 require firebase.google.com/go v3.13.0+incompatible
 
@@ -41,7 +43,7 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/api v0.189.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/appengine/v2 v2.0.2 // indirect
