@@ -9,6 +9,7 @@ import { AuthorRoute } from '@/explore/AuthorRoute';
 import { ExploreRoute } from '@/explore/ExploreRoute';
 import { MeRoute } from '@/explore/MeRoute';
 import { GistRoute } from '@/gist/GistRoute';
+import { HistoryRoute } from '@/history/HistoryRoute';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export function App() {
@@ -18,6 +19,7 @@ export function App() {
         <Route path="/" element={<EditorRoute />} />
         <Route path="/g/:slug" element={<GistRoute />} />
         <Route path="/g/:slug/edit" element={<EditorRoute />} />
+        <Route path="/g/:slug/history" element={<HistoryRoute />} />
         <Route path="/explore" element={<ExploreRoute />} />
         <Route path="/about" element={<AboutRoute />} />
         <Route path="/sign-in" element={<SignInRoute />} />

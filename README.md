@@ -83,6 +83,9 @@ cd frontend && npm run typecheck && npm run lint && npm run build
 |---|---|---|
 | `GET` | `/v1/health` | — |
 | `GET` | `/v1/highlight.css` | — |
+| `GET` | `/v1/me` | required |
+| `POST` | `/v1/preview` | — |
+| `POST` | `/v1/paste` | optional, required for `private` |
 | `GET` | `/v1/gists` | optional |
 | `GET` | `/v1/gists/search?q=` | — |
 | `POST` | `/v1/gists` | optional, required for `private` |
@@ -92,6 +95,38 @@ cd frontend && npm run typecheck && npm run lint && npm run build
 | `PUT` | `/v1/gists/{slug}/files` | author |
 | `POST` | `/v1/gists/{slug}/files` | author |
 | `GET` | `/v1/gists/{slug}/raw/{filename}` | optional |
+| `GET` | `/v1/gists/{slug}/revisions` | optional |
+| `GET` | `/v1/gists/{slug}/revisions/{n}` | optional |
+| `POST` | `/v1/gists/{slug}/revisions/{n}/restore` | author |
+| `GET` | `/v1/gists/{slug}/og.png` | optional |
+| `GET` | `/v1/gists/{slug}/preview.html` | optional |
+
+### From a shell
+
+`POST /v1/paste` takes the body as the file and answers with the link as plain text,
+so it works in a pipe with no JSON to compose:
+
+```sh
+cat notes.md | curl --data-binary @- 'http://localhost:8000/v1/paste?filename=notes.md'
+```
+
+`scripts/quickgist` wraps that with a filename, visibility and expiry:
+
+```sh
+scripts/quickgist notes.md              # unlisted, keeping the filename
+cat notes.md | scripts/quickgist        # from a pipe, as paste.md
+scripts/quickgist -v public -e 7 bug.go # public, deleted after a week
+```
+
+`QUICKGIST_API` points it at a different deployment and `QUICKGIST_TOKEN` signs the
+gist as you, which is only needed for `private`.
+
+### Link previews
+
+Crawlers do not run JavaScript, so a gist link pasted into a chat would preview as
+nothing. `preview.html` is the document they get instead, and `og.png` is the card it
+names, drawn per request from the gist's own title and files. The frontend's
+`vercel.json` routes crawler user agents to the first of those.
 
 Every error has one shape:
 

@@ -487,3 +487,70 @@
   max-width: 100%;
   height: auto;
 }
+
+/*
+  The copy button on a code block.
+
+  The block is the positioning context and the button is added to it in the DOM
+  after the fact, so neither can be styled by a utility class: the markup they
+  attach to came from the server.
+*/
+.code-block-host {
+  position: relative;
+}
+
+.code-copy {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  padding: 0.15rem 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  opacity: 0;
+  transition: opacity 120ms ease;
+  cursor: pointer;
+}
+
+.code-block-host:hover .code-copy,
+.code-copy:focus-visible {
+  opacity: 1;
+}
+
+.code-copy:hover {
+  color: var(--heading);
+  border-color: var(--border-strong);
+}
+
+/* A touch device has no hover, so the button is simply always there. */
+@media (hover: none) {
+  .code-copy {
+    opacity: 1;
+  }
+}
+
+.code-copy[data-copied] {
+  opacity: 1;
+  color: var(--blue-action);
+  border-color: var(--blue-action);
+}
+
+/* A line selected by the #L12-L20 fragment, in both columns of the table. */
+.gist-prose :where([data-line-selected]) {
+  display: inline-block;
+  width: 100%;
+  background: color-mix(in oklab, var(--blue-action) 16%, transparent);
+}
+
+/* A diff row. The marker column carries the same information as the colour. */
+.diff-row[data-diff='added'] {
+  background: color-mix(in oklab, #3fb950 14%, transparent);
+}
+
+.diff-row[data-diff='removed'] {
+  background: color-mix(in oklab, #f85149 14%, transparent);
+}

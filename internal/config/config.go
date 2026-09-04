@@ -37,6 +37,12 @@ type Config struct {
 
 	AllowedOrigins []string
 
+	// PublicBaseURL is where the frontend is served, which is the only thing that
+	// can turn a slug into a link somebody can open. It is needed wherever this
+	// service has to name a page rather than answer a request for one: the paste
+	// endpoint's response, and the canonical URL on a link preview.
+	PublicBaseURL string
+
 	RateLimitRPS     int
 	RateLimitBurst   int
 	RateLimitEnabled bool
@@ -93,6 +99,8 @@ func Load(version string) (*Config, error) {
 		ServiceVersion: version,
 	}
 
+	c.PublicBaseURL = strings.TrimSuffix(env("PUBLIC_BASE_URL", firstOrigin(c.AllowedOrigins)), "/")
+
 	if err := c.validate(); err != nil {
 		return nil, err
 	}
@@ -128,6 +136,17 @@ func loadEnvFiles() error {
 		}
 	}
 	return nil
+}
+
+// firstOrigin is the fallback for PUBLIC_BASE_URL.
+//
+// The first allowed origin is the frontend in every deployment this service has,
+// so requiring the same value twice would be a second thing to get wrong.
+func firstOrigin(origins []string) string {
+	if len(origins) == 0 {
+		return ""
+	}
+	return origins[0]
 }
 
 // withColon normalises a port into the form http.Server expects.

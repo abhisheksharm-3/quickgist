@@ -5,6 +5,7 @@ import type { EditorActionType, EditorDraftType } from '@/editor/types';
 
 function draftOf(filenames: string[], activeIndex = 0): EditorDraftType {
   return {
+    title: '',
     files: filenames.map((filename, index) => ({
       id: `file-${index}`,
       filename,

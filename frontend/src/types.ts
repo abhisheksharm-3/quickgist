@@ -6,6 +6,8 @@ import type {
   FileKindSchema,
   GistFileSchema,
   GistSchema,
+  RevisionSchema,
+  RevisionSummarySchema,
   VisibilitySchema,
 } from '@/schemas';
 
@@ -15,6 +17,8 @@ export type AuthorType = z.infer<typeof AuthorSchema>;
 export type GistFileType = z.infer<typeof GistFileSchema>;
 export type GistType = z.infer<typeof GistSchema>;
 export type ApiErrorType = z.infer<typeof ApiErrorSchema>;
+export type RevisionSummaryType = z.infer<typeof RevisionSummarySchema>;
+export type RevisionType = z.infer<typeof RevisionSchema>;
 
 /** A text file as the create and replace endpoints accept it. */
 export type FileInputType = {

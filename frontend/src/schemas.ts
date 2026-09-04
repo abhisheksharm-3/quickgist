@@ -42,6 +42,31 @@ export const GistSchema = z.object({
 
 export const GistListSchema = z.array(GistSchema);
 
+export const RevisionSummarySchema = z.object({
+  revision: z.number(),
+  title: z.string(),
+  fileCount: z.number(),
+  createdAt: z.string(),
+});
+
+export const RevisionListSchema = z.array(RevisionSummarySchema);
+
+export const RevisionSchema = z.object({
+  revision: z.number(),
+  title: z.string(),
+  description: z.string(),
+  createdAt: z.string(),
+  files: z.array(
+    z.object({
+      filename: z.string(),
+      language: z.string().nullish(),
+      content: z.string().nullish(),
+      storage_path: z.string().nullish(),
+      byte_size: z.number().nullish(),
+    }),
+  ),
+});
+
 export const ApiErrorSchema = z.object({
   error: z.object({
     code: z.string(),

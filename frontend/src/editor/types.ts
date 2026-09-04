@@ -11,6 +11,7 @@ export type DraftFileType = {
 };
 
 export type EditorDraftType = {
+  title: string;
   files: DraftFileType[];
   activeIndex: number;
 };
@@ -23,6 +24,7 @@ export type AttachedTextType = {
 export type EditorActionType =
   | { type: 'add' }
   | { type: 'attach'; files: AttachedTextType[] }
+  | { type: 'title'; title: string }
   | { type: 'rename'; index: number; filename: string }
   | { type: 'edit'; index: number; content: string }
   | { type: 'remove'; index: number }

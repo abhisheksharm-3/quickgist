@@ -29,20 +29,30 @@ const MAX_FILES = 20;
 
 export function createEmptyDraft(): EditorDraftType {
   return {
+    title: '',
     files: [createDraftFile(`untitled-1${DEFAULT_EXTENSION}`)],
     activeIndex: 0,
   };
 }
 
+/**
+ * Copies a published gist into an editable draft.
+ *
+ * Only text files come across. An upload has no content in the payload and cannot be
+ * copied by the browser, so a fork of a gist holding one is a fork of its text.
+ */
 export function createDraftFromGist(gist: GistType): EditorDraftType {
-  const files = gist.files.map((file) => ({
-    id: crypto.randomUUID(),
-    filename: file.filename,
-    language: file.language,
-    content: file.content ?? '',
-  }));
+  const files = gist.files
+    .filter((file) => file.content !== undefined)
+    .map((file) => ({
+      id: crypto.randomUUID(),
+      filename: file.filename,
+      language: file.language,
+      content: file.content ?? '',
+    }));
 
   return {
+    title: gist.title,
     files: files.length > 0 ? files : [createDraftFile(`untitled-1${DEFAULT_EXTENSION}`)],
     activeIndex: 0,
   };
@@ -54,6 +64,8 @@ export function editorReducer(draft: EditorDraftType, action: EditorActionType):
       return addFile(draft);
     case 'attach':
       return attachFiles(draft, action.files);
+    case 'title':
+      return { ...draft, title: action.title };
     case 'rename':
       return renameFile(draft, action.index, action.filename);
     case 'edit':
@@ -72,6 +84,7 @@ function addFile(draft: EditorDraftType): EditorDraftType {
 
   const file = createDraftFile(nextUntitledName(draft.files));
   return {
+    ...draft,
     files: [...draft.files, file],
     activeIndex: draft.files.length,
   };
@@ -101,7 +114,7 @@ function attachFiles(draft: EditorDraftType, added: AttachedTextType[]): EditorD
 
   if (files.length === 0) return draft;
 
-  return { files, activeIndex: files.length - 1 };
+  return { ...draft, files, activeIndex: files.length - 1 };
 }
 
 function isUntouched(draft: EditorDraftType): boolean {
@@ -152,7 +165,7 @@ function removeFile(draft: EditorDraftType, index: number): EditorDraftType {
       ? draft.activeIndex - 1
       : Math.min(draft.activeIndex, files.length - 1);
 
-  return { files, activeIndex };
+  return { ...draft, files, activeIndex };
 }
 
 function switchFile(draft: EditorDraftType, index: number): EditorDraftType {

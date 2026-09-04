@@ -33,6 +33,7 @@ func (a *API) registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/highlight.css", a.HighlightCSS)
 	mux.HandleFunc("GET /v1/me", a.Me)
 	mux.Handle("POST /v1/preview", a.rateLimit(a.previewLimiter)(http.HandlerFunc(a.Preview)))
+	mux.HandleFunc("POST /v1/paste", a.Paste)
 
 	mux.HandleFunc("GET /v1/gists/search", a.SearchGists)
 	mux.HandleFunc("GET /v1/gists", a.ListGists)
@@ -43,6 +44,11 @@ func (a *API) registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("PUT /v1/gists/{slug}/files", a.ReplaceGistFiles)
 	mux.HandleFunc("POST /v1/gists/{slug}/files", a.UploadFile)
 	mux.HandleFunc("GET /v1/gists/{slug}/raw/{filename...}", a.RawFile)
+	mux.HandleFunc("GET /v1/gists/{slug}/revisions", a.ListRevisions)
+	mux.HandleFunc("GET /v1/gists/{slug}/revisions/{revision}", a.GetRevision)
+	mux.HandleFunc("POST /v1/gists/{slug}/revisions/{revision}/restore", a.RestoreRevision)
+	mux.HandleFunc("GET /v1/gists/{slug}/og.png", a.OGImage)
+	mux.HandleFunc("GET /v1/gists/{slug}/preview.html", a.PreviewHTML)
 
 	mux.HandleFunc("/", a.notFound)
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/abhisheksharm-3/quickgist/internal/auth"
 	"github.com/abhisheksharm-3/quickgist/internal/blob"
+	"github.com/abhisheksharm-3/quickgist/internal/card"
 	"github.com/abhisheksharm-3/quickgist/internal/config"
 	"github.com/abhisheksharm-3/quickgist/internal/render"
 	"github.com/abhisheksharm-3/quickgist/internal/store"
@@ -20,6 +21,7 @@ type API struct {
 	store          *store.Store
 	blobs          *blob.Store
 	renderer       *render.Renderer
+	cards          *card.Renderer
 	verifier       *auth.Verifier
 	log            *slog.Logger
 	version        string
@@ -45,11 +47,17 @@ func New(
 		return nil, err
 	}
 
+	cards, err := card.New()
+	if err != nil {
+		return nil, err
+	}
+
 	return &API{
 		cfg:            cfg,
 		store:          st,
 		blobs:          blobs,
 		renderer:       renderer,
+		cards:          cards,
 		verifier:       verifier,
 		log:            log,
 		version:        version,

@@ -1,11 +1,13 @@
 /** The gist endpoints, one function per route. */
 import { apiRequest, apiRequestEmpty, apiUpload } from '@/lib/api-client';
-import { GistListSchema, GistSchema } from '@/schemas';
+import { GistListSchema, GistSchema, RevisionListSchema, RevisionSchema } from '@/schemas';
 import type {
   CreateGistInputType,
   FileInputType,
   GistType,
   ListGistsQueryType,
+  RevisionSummaryType,
+  RevisionType,
   UpdateGistInputType,
   UploadFileInputType,
 } from '@/types';
@@ -34,6 +36,20 @@ export function replaceGistFiles(slug: string, files: FileInputType[]): Promise<
   return apiRequest(`/v1/gists/${slug}/files`, GistSchema, {
     method: 'PUT',
     body: { files },
+  });
+}
+
+export function listRevisions(slug: string): Promise<RevisionSummaryType[]> {
+  return apiRequest(`/v1/gists/${slug}/revisions`, RevisionListSchema);
+}
+
+export function fetchRevision(slug: string, revision: number): Promise<RevisionType> {
+  return apiRequest(`/v1/gists/${slug}/revisions/${revision}`, RevisionSchema);
+}
+
+export function restoreRevision(slug: string, revision: number): Promise<GistType> {
+  return apiRequest(`/v1/gists/${slug}/revisions/${revision}/restore`, GistSchema, {
+    method: 'POST',
   });
 }
 

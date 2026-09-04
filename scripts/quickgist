@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+#
+# quickgist — share a file or a pipe as a link.
+#
+#   quickgist notes.md                 # share a file, keeping its name
+#   cat notes.md | quickgist           # share stdin as paste.md
+#   pbpaste | quickgist -n bug.go      # name the file yourself
+#   quickgist -v public notes.md       # public instead of unlisted
+#   quickgist -e 7 notes.md            # delete it after 7 days
+#
+# The link is printed on stdout and nothing else is, so it pipes into pbcopy.
+#
+# QUICKGIST_API sets the endpoint, defaulting to production. QUICKGIST_TOKEN is an
+# access token, needed only for a private gist; without one the gist is anonymous,
+# which is what the web editor does too.
+set -euo pipefail
+
+API="${QUICKGIST_API:-https://quickgist-api.onrender.com}"
+filename=""
+visibility="unlisted"
+expires=""
+title=""
+
+usage() {
+	sed -n '3,16p' "$0" | sed 's/^# \{0,1\}//'
+	exit "${1:-0}"
+}
+
+while getopts ':n:v:e:t:h' option; do
+	case "$option" in
+	n) filename="$OPTARG" ;;
+	v) visibility="$OPTARG" ;;
+	e) expires="$OPTARG" ;;
+	t) title="$OPTARG" ;;
+	h) usage ;;
+	*) usage 1 ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+source_file="${1:--}"
+if [ "$source_file" != "-" ] && [ -z "$filename" ]; then
+	filename="$(basename -- "$source_file")"
+fi
+
+query="visibility=$visibility"
+[ -n "$filename" ] && query="$query&filename=$filename"
+[ -n "$expires" ] && query="$query&expires=$expires"
+[ -n "$title" ] && query="$query&title=$title"
+
+# --data-binary keeps the bytes as they are; --data would strip the newlines, which
+# matters for Markdown, where a blank line is a paragraph break.
+curl --fail-with-body --silent --show-error \
+	--request POST \
+	--header 'Content-Type: text/plain' \
+	${QUICKGIST_TOKEN:+--header "Authorization: Bearer $QUICKGIST_TOKEN"} \
+	--data-binary "@$source_file" \
+	"$API/v1/paste?$query"

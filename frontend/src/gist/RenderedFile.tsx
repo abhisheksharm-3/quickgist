@@ -7,6 +7,9 @@
  */
 import { useState } from 'react';
 import { panelId, tabId } from '@/chrome/FileTabs';
+import { DocumentToc } from '@/gist/DocumentToc';
+import { useCodeCopy } from '@/gist/use-code-copy';
+import { useLineAnchors } from '@/gist/use-line-anchors';
 import { useMermaid } from '@/gist/use-mermaid';
 import type { GistFileType } from '@/types';
 
@@ -22,6 +25,10 @@ type RenderedFilePropsType = {
  * rules say where the page is, and the space beside them reads as margin instead of
  * a rendering failure.
  *
+ * Everything that makes the document interactive works on the injected HTML from the
+ * outside, because there is no React tree inside it: diagrams are drawn, code blocks
+ * get a copy button, line numbers become a selection, and headings become a rail.
+ *
  * Prose is held to a reading measure; code and tables inside it are allowed to
  * exceed that and scroll in their own container, which is why the measure is on the
  * prose wrapper rather than on the pane.
@@ -31,6 +38,8 @@ export function RenderedFile({ file }: RenderedFilePropsType) {
   const [documentElement, setDocumentElement] = useState<HTMLElement | null>(null);
 
   useMermaid(documentElement, file.html);
+  useCodeCopy(documentElement, file.html);
+  useLineAnchors(documentElement, file.html);
 
   return (
     <section
@@ -41,14 +50,20 @@ export function RenderedFile({ file }: RenderedFilePropsType) {
     >
       <div className="mx-auto min-h-[58dvh] w-full max-w-[78rem] border-[var(--border)] px-5 py-8 sm:border-x sm:px-10 sm:py-10">
         {file.html ? (
-          <div
-            ref={setDocumentElement}
-            className={isProse ? 'gist-prose reading-measure' : 'gist-prose'}
-          >
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-10">
             <div
-              // The API sanitised this with bluemonday before it left the server.
-              dangerouslySetInnerHTML={{ __html: file.html }}
-            />
+              ref={setDocumentElement}
+              className={isProse ? 'gist-prose reading-measure' : 'gist-prose min-w-0'}
+            >
+              <div
+                // The API sanitised this with bluemonday before it left the server.
+                dangerouslySetInnerHTML={{ __html: file.html }}
+              />
+            </div>
+
+            <aside className="lg:sticky lg:top-[calc(var(--chrome-h)+2rem)] lg:self-start">
+              <DocumentToc container={documentElement} html={file.html} />
+            </aside>
           </div>
         ) : (
           <pre className="overflow-x-auto border border-[var(--border)] bg-[var(--panel-2)] p-4 font-mono text-[11px] leading-[1.7]">

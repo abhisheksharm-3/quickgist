@@ -10,7 +10,7 @@ import { GistMeta } from '@/gist/GistMeta';
 import { LinkBand } from '@/gist/LinkBand';
 import { RenderedFile } from '@/gist/RenderedFile';
 import { isNetworkError } from '@/lib/network-error';
-import { useGist } from '@/lib/use-gist-queries';
+import { useGist, useRevisions } from '@/lib/use-gist-queries';
 import { useMyProfile } from '@/lib/use-my-profile';
 import type { GistFileType } from '@/types';
 
@@ -24,6 +24,7 @@ export function GistRoute() {
   const location = useLocation();
   const { data: gist, isPending, isError, error } = useGist(slug);
   const profile = useMyProfile();
+  const revisions = useRevisions(slug);
 
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [isBandDismissed, setBandDismissed] = useState(false);
@@ -92,6 +93,9 @@ export function GistRoute() {
       <meta name="description" content={gist.description || 'A gist on quickgist.'} />
       <meta property="og:title" content={gist.title} />
       <meta property="og:description" content={gist.description || 'A gist on quickgist.'} />
+      <meta property="og:url" content={window.location.href} />
+      <meta property="og:image" content={cardUrlFor(slug)} />
+      <meta name="twitter:card" content="summary_large_image" />
 
       {justCreated && !isBandDismissed ? (
         <LinkBand url={window.location.href} onDismiss={() => setBandDismissed(true)} />
@@ -101,6 +105,7 @@ export function GistRoute() {
         gist={gist}
         rawUrl={activeFile ? rawUrlFor(slug, activeFile.filename) : undefined}
         editUrl={canEdit ? `/g/${slug}/edit` : undefined}
+        revisionCount={revisions.data?.length ?? 0}
       />
 
       <main className="flex min-h-0 flex-1 flex-col">
@@ -134,6 +139,12 @@ export function GistRoute() {
       />
     </>
   );
+}
+
+/** The link-preview card the API draws for this gist. */
+function cardUrlFor(slug: string): string {
+  const base = import.meta.env.VITE_API_BASE_URL ?? '';
+  return `${base}/v1/gists/${slug}/og.png`;
 }
 
 /** Where a file's unrendered source lives, matching the API's raw route. */

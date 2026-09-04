@@ -66,20 +66,13 @@ export function EditorRoute(): React.JSX.Element {
   const profile = useMyProfile();
   const attachments = useAttachments(dispatch, Boolean(user));
 
-  const [title, setTitle] = useState('');
-  const titleInitialized = useRef(false);
+  const title = draft.title;
   const titleSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  useEffect(() => {
-    if (!isEditMode || titleInitialized.current || !gistQuery.data) return;
-    titleInitialized.current = true;
-    setTitle(gistQuery.data.title);
-  }, [isEditMode, gistQuery.data]);
 
   useEffect(() => () => clearTimeout(titleSaveTimer.current), []);
 
   const handleTitleChange = (nextTitle: string): void => {
-    setTitle(nextTitle);
+    dispatch({ type: 'title', title: nextTitle });
 
     if (!isEditMode || !slug) {
       return;

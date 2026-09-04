@@ -9,4 +9,6 @@ export const gistQueryKeys = {
   detail: (slug: string) => ['gists', 'detail', slug] as const,
   list: (query: ListGistsQueryType) => ['gists', 'list', query] as const,
   search: (q: string) => ['gists', 'search', q] as const,
+  revisions: (slug: string) => ['gists', 'revisions', slug] as const,
+  revision: (slug: string, revision: number) => ['gists', 'revisions', slug, revision] as const,
 };

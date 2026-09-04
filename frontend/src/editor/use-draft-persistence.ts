@@ -25,6 +25,13 @@ export function loadPersistedDraft(key: string): EditorDraftType | null {
   }
 }
 
+/** Writes a draft outside the editor, which is how a fork reaches it. */
+export function savePersistedDraft(key: string, draft: EditorDraftType): void {
+  try {
+    window.localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(draft));
+  } catch {}
+}
+
 export function clearPersistedDraft(key: string): void {
   window.localStorage.removeItem(STORAGE_PREFIX + key);
 }

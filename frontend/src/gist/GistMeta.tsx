@@ -1,13 +1,16 @@
 /** The gist's title, byline and actions, above the file tabs. */
-import { Check, Copy, FileCode, Pencil } from 'lucide-react';
+import { Check, Copy, FileCode, GitFork, History, Pencil } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { createDraftFromGist } from '@/editor/editor-reducer';
+import { savePersistedDraft } from '@/editor/use-draft-persistence';
 import type { GistType } from '@/types';
 
 type GistMetaPropsType = {
   gist: GistType;
   rawUrl: string | undefined;
   editUrl: string | undefined;
+  revisionCount: number;
 };
 
 const action =
@@ -23,7 +26,8 @@ const action =
  * Visibility is a bordered chip because whether a link is public is the one fact on
  * this line somebody might act on.
  */
-export function GistMeta({ gist, rawUrl, editUrl }: GistMetaPropsType) {
+export function GistMeta({ gist, rawUrl, editUrl, revisionCount }: GistMetaPropsType) {
+  const navigate = useNavigate();
   const [justCopied, setJustCopied] = useState(false);
 
   const handleCopy = (): void => {
@@ -31,6 +35,18 @@ export function GistMeta({ gist, rawUrl, editUrl }: GistMetaPropsType) {
       setJustCopied(true);
       setTimeout(() => setJustCopied(false), 2000);
     });
+  };
+
+  /**
+   * Forking loads the gist into the new-gist draft and opens the editor.
+   *
+   * It creates nothing until the fork is published, so it needs no account and no
+   * endpoint of its own: the draft is the same one the editor would have persisted
+   * had the text been typed.
+   */
+  const handleFork = (): void => {
+    savePersistedDraft('new', createDraftFromGist(gist));
+    navigate('/');
   };
 
   return (
@@ -79,6 +95,18 @@ export function GistMeta({ gist, rawUrl, editUrl }: GistMetaPropsType) {
             <Copy className="size-3" aria-hidden />
           )}
           {justCopied ? 'Copied' : 'Copy link'}
+        </button>
+
+        {revisionCount > 0 ? (
+          <Link to={`/g/${gist.slug}/history`} className={action}>
+            <History className="size-3" aria-hidden />
+            {revisionCount === 1 ? '1 revision' : `${revisionCount} revisions`}
+          </Link>
+        ) : null}
+
+        <button type="button" onClick={handleFork} className={action}>
+          <GitFork className="size-3" aria-hidden />
+          Fork
         </button>
 
         {rawUrl ? (

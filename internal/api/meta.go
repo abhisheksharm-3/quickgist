@@ -8,14 +8,19 @@ import (
 
 // HighlightCSS handles GET /v1/highlight.css.
 //
-// The stylesheet is generated at startup and immutable for the life of a renderer
-// hash, so it is safe to cache indefinitely. Serving it from the API keeps the
+// The stylesheet is generated at startup and serving it from the API keeps the
 // highlight classes and the rules that style them versioned together.
+//
+// It is cached for ten minutes with revalidation rather than for a year as
+// immutable. The URL carries no hash, so immutable meant exactly what it says: a
+// browser that had the old file never asked for the new one, and a palette fix took
+// effect for nobody who had already loaded a gist. The ETag makes a revalidation a
+// 304 of a few bytes.
 func (a *API) HighlightCSS(w http.ResponseWriter, r *http.Request) {
 	etag := `"` + a.renderer.Hash() + `"`
 
 	w.Header().Set("Content-Type", "text/css; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	w.Header().Set("Cache-Control", "public, max-age=600, must-revalidate")
 	w.Header().Set("ETag", etag)
 
 	if r.Header.Get("If-None-Match") == etag {

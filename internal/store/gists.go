@@ -22,6 +22,18 @@ func (s *Store) GetGist(ctx context.Context, id *auth.Identity, slug string) (*G
 	return &g, nil
 }
 
+// GetGistMeta reads a gist without counting a view.
+//
+// Used by everything that loads a gist for a machine rather than for a reader: the
+// link preview a chat client fetches, and the card image that preview names.
+func (s *Store) GetGistMeta(ctx context.Context, id *auth.Identity, slug string) (*Gist, error) {
+	var g Gist
+	if err := s.queryJSON(ctx, id, &g, "select get_gist_meta($1)", slug); err != nil {
+		return nil, err
+	}
+	return &g, nil
+}
+
 // CreateGist inserts a gist and all of its files in one transaction, so a partially
 // created gist is not a state the caller can observe.
 func (s *Store) CreateGist(ctx context.Context, id *auth.Identity, in CreateGistInput) (*Gist, error) {

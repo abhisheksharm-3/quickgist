@@ -7,7 +7,10 @@ import {
   createGist,
   deleteGist,
   fetchGist,
+  fetchRevision,
   listGists,
+  listRevisions,
+  restoreRevision,
   searchGists,
   updateGist,
   uploadGistFile,
@@ -17,6 +20,8 @@ import type {
   CreateGistInputType,
   GistType,
   ListGistsQueryType,
+  RevisionSummaryType,
+  RevisionType,
   UpdateGistInputType,
   UploadFileInputType,
 } from '@/types';
@@ -93,6 +98,49 @@ export function useUploadGistFile(): UseMutationResult<GistType, ApiError, Uploa
     mutationFn: uploadGistFile,
     onSuccess: (gist) => {
       queryClient.setQueryData(gistQueryKeys.detail(gist.slug), gist);
+    },
+  });
+}
+
+/**
+ * A gist's version list.
+ *
+ * Kept fresh for a minute rather than per navigation: history only changes when its
+ * author saves, and the page showing it is usually opened, read and left.
+ */
+export function useRevisions(slug: string): UseQueryResult<RevisionSummaryType[], ApiError> {
+  return useQuery({
+    queryKey: gistQueryKeys.revisions(slug),
+    queryFn: () => listRevisions(slug),
+    enabled: slug.length > 0,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useRevision(
+  slug: string,
+  revision: number | null,
+): UseQueryResult<RevisionType, ApiError> {
+  return useQuery({
+    queryKey: gistQueryKeys.revision(slug, revision ?? 0),
+    queryFn: () => fetchRevision(slug, revision ?? 0),
+    enabled: slug.length > 0 && revision !== null,
+  });
+}
+
+type RestoreVariablesType = {
+  slug: string;
+  revision: number;
+};
+
+export function useRestoreRevision(): UseMutationResult<GistType, ApiError, RestoreVariablesType> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ slug, revision }: RestoreVariablesType) => restoreRevision(slug, revision),
+    onSuccess: (gist) => {
+      queryClient.setQueryData(gistQueryKeys.detail(gist.slug), gist);
+      void queryClient.invalidateQueries({ queryKey: gistQueryKeys.revisions(gist.slug) });
     },
   });
 }

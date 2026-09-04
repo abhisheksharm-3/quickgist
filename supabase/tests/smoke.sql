@@ -21,6 +21,7 @@ declare
     pub_slug   text;
     priv_slug  text;
     blob_slug  text;
+    rev_slug   text;
     payload    jsonb;
     handle     text;
     n          int;
@@ -246,6 +247,60 @@ begin
         assert false, 'a file was allowed to be both text and blob';
     exception when check_violation then null;
     end;
+
+    -- ---- revisions --------------------------------------------------------
+    -- Saving files keeps what they were, and the history is readable by anyone who
+    -- can read the gist.
+    perform set_config('request.jwt.claims',
+        json_build_object('sub', author_id::text)::text, true);
+
+    payload := create_gist(
+        p_title      => 'Versioned',
+        p_visibility => 'public',
+        p_files      => '[{"filename":"a.md","content":"one"}]'::jsonb
+    );
+    rev_slug := payload ->> 'slug';
+
+    assert jsonb_array_length(list_revisions(rev_slug)) = 0,
+        'a gist had a revision before it was ever saved';
+
+    perform replace_gist_files(rev_slug, '[{"filename":"a.md","content":"two"}]'::jsonb);
+    perform replace_gist_files(rev_slug, '[{"filename":"a.md","content":"three"}]'::jsonb);
+
+    n := jsonb_array_length(list_revisions(rev_slug));
+    assert n = 2, format('two saves left %s revisions, expected 2', n);
+
+    assert get_revision(rev_slug, 1) -> 'files' -> 0 ->> 'content' = 'one',
+        'revision 1 did not hold the text it replaced';
+    assert get_revision(rev_slug, 2) -> 'files' -> 0 ->> 'content' = 'two',
+        'revision 2 did not hold the text it replaced';
+    assert get_revision(rev_slug, 9) is null, 'a revision that does not exist was returned';
+
+    -- Restoring is itself a save, so it snapshots what it overwrites.
+    perform restore_revision(rev_slug, 1);
+    assert (select content from gist_files where gist_id = (select id from gists where slug = rev_slug))
+        = 'one', 'restore did not put the old text back';
+    n := jsonb_array_length(list_revisions(rev_slug));
+    assert n = 3, format('restore left %s revisions, expected 3', n);
+
+    -- A reader sees the history; a stranger cannot restore it.
+    perform set_config('request.jwt.claims', null, true);
+    assert jsonb_array_length(list_revisions(rev_slug)) = 3,
+        'an anonymous reader could not see a public gist''s history';
+
+    begin
+        perform restore_revision(rev_slug, 1);
+        assert false, 'an anonymous caller was allowed to restore a revision';
+    exception when insufficient_privilege then null;
+    end;
+
+    -- A private gist keeps its history private.
+    perform set_config('request.jwt.claims',
+        json_build_object('sub', author_id::text)::text, true);
+    perform update_gist(p_slug => rev_slug, p_visibility => 'private');
+    perform set_config('request.jwt.claims', null, true);
+    assert list_revisions(rev_slug) is null,
+        'a private gist exposed its history to an anonymous caller';
 
     raise notice 'ALL ASSERTIONS PASSED';
 end;
