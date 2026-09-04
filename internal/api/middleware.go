@@ -106,6 +106,11 @@ func (a *API) logging(next http.Handler) http.Handler {
 		next.ServeHTTP(rec, r)
 
 		status := rec.statusOr()
+
+		if isProbe(r) && status < http.StatusBadRequest {
+			return
+		}
+
 		a.log.Log(r.Context(), levelFor(status), "request",
 			"method", r.Method,
 			"path", r.URL.Path,
@@ -115,6 +120,18 @@ func (a *API) logging(next http.Handler) http.Handler {
 			"ip", a.clientIP(r),
 		)
 	})
+}
+
+// isProbe reports whether a request is a platform health check.
+//
+// A successful one is logged at nothing. Render polls every ten seconds forever, so
+// logging it buries every real request under 8,640 lines a day. A failing probe is
+// still logged, because that is the case somebody needs to see.
+func isProbe(r *http.Request) bool {
+	if r.URL.Path != "/" && r.URL.Path != "/v1/health" {
+		return false
+	}
+	return r.Method == http.MethodGet || r.Method == http.MethodHead
 }
 
 // levelFor maps an HTTP status onto a log level.

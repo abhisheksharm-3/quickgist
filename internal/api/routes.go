@@ -28,6 +28,8 @@ func (a *API) Handler() (http.Handler, func()) {
 
 // registerRoutes maps every path this service answers.
 func (a *API) registerRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /{$}", a.Root)
+	mux.HandleFunc("HEAD /{$}", a.Root)
 	mux.HandleFunc("GET /v1/health", a.Health)
 	mux.HandleFunc("HEAD /v1/health", a.Health)
 	mux.HandleFunc("GET /v1/highlight.css", a.HighlightCSS)

@@ -6,6 +6,21 @@ import (
 	"net/http"
 )
 
+// Root handles GET / and HEAD /.
+//
+// An API root has nothing to serve, and answering 404 would be defensible if
+// nothing asked. A platform health check asks: Render polls / by default, and a
+// deploy whose probe never returns 200 is held back and then reported as timed out,
+// which describes the probe rather than the service. Naming the service and where
+// its real health endpoint lives costs one handler and removes that failure.
+func (a *API) Root(w http.ResponseWriter, r *http.Request) {
+	a.respond(w, r, http.StatusOK, map[string]string{
+		"service": a.cfg.ServiceName,
+		"version": a.version,
+		"health":  "/v1/health",
+	})
+}
+
 // HighlightCSS handles GET /v1/highlight.css.
 //
 // The stylesheet is generated at startup and serving it from the API keeps the
