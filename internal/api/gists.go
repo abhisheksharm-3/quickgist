@@ -169,7 +169,7 @@ func (a *API) DeleteGist(w http.ResponseWriter, r *http.Request) {
 func (a *API) ListGists(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
-	before, err := parseBefore(q.Get("before"))
+	cursor, err := parseCursor(q)
 	if err != nil {
 		a.fail(w, r, http.StatusBadRequest, codeInvalidRequest, err)
 		return
@@ -180,7 +180,7 @@ func (a *API) ListGists(w http.ResponseWriter, r *http.Request) {
 		handle = &h
 	}
 
-	gists, err := a.store.ListGists(r.Context(), a.identity(r), handle, pageSize(q.Get("limit")), before)
+	gists, err := a.store.ListGists(r.Context(), a.identity(r), handle, pageSize(q.Get("limit")), cursor)
 	if err != nil {
 		a.failFromStore(w, r, err)
 		return

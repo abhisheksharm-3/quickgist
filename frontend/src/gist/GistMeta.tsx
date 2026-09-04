@@ -1,5 +1,5 @@
 /** The gist's title, byline and actions, above the file tabs. */
-import { Check, Copy, FileCode, GitFork, History, Pencil } from 'lucide-react';
+import { Check, Copy, FileCode, GitFork, History, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { createDraftFromGist } from '@/editor/editor-reducer';
@@ -11,6 +11,7 @@ type GistMetaPropsType = {
   rawUrl: string | undefined;
   editUrl: string | undefined;
   revisionCount: number;
+  onDelete: (() => void) | undefined;
 };
 
 const action =
@@ -26,7 +27,7 @@ const action =
  * Visibility is a bordered chip because whether a link is public is the one fact on
  * this line somebody might act on.
  */
-export function GistMeta({ gist, rawUrl, editUrl, revisionCount }: GistMetaPropsType) {
+export function GistMeta({ gist, rawUrl, editUrl, revisionCount, onDelete }: GistMetaPropsType) {
   const navigate = useNavigate();
   const [justCopied, setJustCopied] = useState(false);
 
@@ -121,6 +122,17 @@ export function GistMeta({ gist, rawUrl, editUrl, revisionCount }: GistMetaProps
             <Pencil className="size-3" aria-hidden />
             Edit
           </Link>
+        ) : null}
+
+        {onDelete ? (
+          <button
+            type="button"
+            onClick={onDelete}
+            className={`${action} hover:border-[var(--danger)] hover:text-[var(--danger)]`}
+          >
+            <Trash2 className="size-3" aria-hidden />
+            Delete
+          </button>
         ) : null}
       </div>
     </header>

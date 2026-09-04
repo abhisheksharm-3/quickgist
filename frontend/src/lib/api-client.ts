@@ -62,6 +62,18 @@ export async function apiRequest<SchemaType extends z.ZodType>(
   return schema.parse(await response.json());
 }
 
+/** Sends a request expecting no response body, which is what a delete answers. */
+export async function apiRequestEmpty(
+  path: string,
+  options: RequestOptionsType = {},
+): Promise<void> {
+  const response = await sendRequest(path, options);
+
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+}
+
 /** Sends a multipart upload, which needs no JSON content type of its own. */
 export async function apiUpload<SchemaType extends z.ZodType>(
   path: string,

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -96,9 +95,10 @@ func (s *Store) DeleteGist(ctx context.Context, id *auth.Identity, slug string) 
 
 // ListGists returns the public feed, or one author's gists when handle is set. The
 // author's own listing includes their unlisted and private gists; nobody else's does.
-func (s *Store) ListGists(ctx context.Context, id *auth.Identity, handle *string, limit int, before *time.Time) ([]Gist, error) {
+func (s *Store) ListGists(ctx context.Context, id *auth.Identity, handle *string, limit int, cursor Cursor) ([]Gist, error) {
 	gists := []Gist{}
-	if err := s.queryJSON(ctx, id, &gists, "select list_gists($1, $2, $3)", handle, limit, before); err != nil {
+	if err := s.queryJSON(ctx, id, &gists,
+		"select list_gists($1, $2, $3, $4)", handle, limit, cursor.Before, cursor.BeforeSlug); err != nil {
 		return nil, err
 	}
 	return gists, nil

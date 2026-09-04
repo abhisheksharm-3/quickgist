@@ -6,12 +6,13 @@ import { PageHeader } from '@/chrome/PageHeader';
 import { RouteError } from '@/chrome/RouteError';
 import { CommandPalette } from '@/command/CommandPalette';
 import { GistList } from '@/explore/GistList';
-import { useGistList } from '@/lib/use-gist-queries';
+import { LoadMore } from '@/explore/LoadMore';
+import { useGistFeed } from '@/lib/use-gist-queries';
 
 export function AuthorRoute() {
   const { handle = '' } = useParams();
   const navigate = useNavigate();
-  const gists = useGistList({ author: handle });
+  const gists = useGistFeed({ author: handle });
 
   const publicCount = gists.data?.length ?? 0;
 
@@ -27,6 +28,7 @@ export function AuthorRoute() {
           gists.data ? (
             <p className="font-mono text-[11px] text-[var(--faint)]">
               {publicCount} {publicCount === 1 ? 'public gist' : 'public gists'}
+              {gists.hasNextPage ? ' loaded' : ''}
             </p>
           ) : null
         }
@@ -43,6 +45,14 @@ export function AuthorRoute() {
               invisible to everyone but them.
             </EmptyState>
           }
+        />
+      ) : null}
+
+      {gists.data && gists.data.length > 0 ? (
+        <LoadMore
+          hasMore={gists.hasNextPage}
+          isLoading={gists.isFetchingNextPage}
+          onLoad={() => void gists.fetchNextPage()}
         />
       ) : null}
 

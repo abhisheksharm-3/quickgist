@@ -6,11 +6,12 @@ import { OfflineBand } from '@/chrome/OfflineBand';
 import { CommandPalette } from '@/command/CommandPalette';
 import type { CommandType } from '@/command/commands';
 import { BinaryFile } from '@/gist/BinaryFile';
+import { DeleteGistDialog } from '@/gist/DeleteGistDialog';
 import { GistMeta } from '@/gist/GistMeta';
 import { LinkBand } from '@/gist/LinkBand';
 import { RenderedFile } from '@/gist/RenderedFile';
 import { isNetworkError } from '@/lib/network-error';
-import { useGist, useRevisions } from '@/lib/use-gist-queries';
+import { useDeleteGist, useGist, useRevisions } from '@/lib/use-gist-queries';
 import { useMyProfile } from '@/lib/use-my-profile';
 import type { GistFileType } from '@/types';
 
@@ -28,6 +29,8 @@ export function GistRoute() {
 
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [isBandDismissed, setBandDismissed] = useState(false);
+  const [isDeleteOpen, setDeleteOpen] = useState(false);
+  const remove = useDeleteGist();
 
   const justCreated = (location.state as LocationStateType | null)?.justCreated ?? false;
   const canEdit = Boolean(
@@ -49,6 +52,11 @@ export function GistRoute() {
                 label: 'Edit this gist',
                 shortcut: 'E',
                 perform: () => navigate(`/g/${slug}/edit`),
+              },
+              {
+                id: 'delete-gist',
+                label: 'Delete this gist',
+                perform: () => setDeleteOpen(true),
               },
             ]
           : []),
@@ -106,6 +114,24 @@ export function GistRoute() {
         rawUrl={activeFile ? rawUrlFor(slug, activeFile.filename) : undefined}
         editUrl={canEdit ? `/g/${slug}/edit` : undefined}
         revisionCount={revisions.data?.length ?? 0}
+        onDelete={canEdit ? () => setDeleteOpen(true) : undefined}
+      />
+
+      <DeleteGistDialog
+        title={gist.title}
+        fileCount={files.length}
+        isOpen={isDeleteOpen}
+        isDeleting={remove.isPending}
+        error={remove.isError ? remove.error.message : null}
+        onCancel={() => {
+          setDeleteOpen(false);
+          remove.reset();
+        }}
+        onConfirm={() =>
+          remove.mutate(slug, {
+            onSuccess: () => navigate('/me', { replace: true }),
+          })
+        }
       />
 
       <main className="flex min-h-0 flex-1 flex-col">

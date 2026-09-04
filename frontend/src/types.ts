@@ -52,6 +52,19 @@ export type ListGistsQueryType = {
   author?: string;
   limit?: number;
   before?: string;
+  beforeSlug?: string;
+};
+
+/**
+ * A page boundary in the feed.
+ *
+ * Both halves are sent together: created_at alone is not unique, and a cursor
+ * without the slug beside it drops every gist created in the same instant as the
+ * last row of the page before.
+ */
+export type FeedCursorType = {
+  before: string;
+  beforeSlug: string;
 };
 
 export type SignUpProfileType = {

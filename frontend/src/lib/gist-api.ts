@@ -1,5 +1,5 @@
 /** The gist endpoints, one function per route. */
-import { apiRequest, apiUpload } from '@/lib/api-client';
+import { apiRequest, apiRequestEmpty, apiUpload } from '@/lib/api-client';
 import { GistListSchema, GistSchema, RevisionListSchema, RevisionSchema } from '@/schemas';
 import type {
   CreateGistInputType,
@@ -37,6 +37,10 @@ export function replaceGistFiles(slug: string, files: FileInputType[]): Promise<
     method: 'PUT',
     body: { files },
   });
+}
+
+export function deleteGist(slug: string): Promise<void> {
+  return apiRequestEmpty(`/v1/gists/${slug}`, { method: 'DELETE' });
 }
 
 export function listRevisions(slug: string): Promise<RevisionSummaryType[]> {

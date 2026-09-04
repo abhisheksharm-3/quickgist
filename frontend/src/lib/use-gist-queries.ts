@@ -1,9 +1,14 @@
 /** React Query hooks over the gist endpoints. */
 
-import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type {
+  UseInfiniteQueryResult,
+  UseMutationResult,
+  UseQueryResult,
+} from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api-client';
 import {
+  deleteGist,
   fetchGist,
   fetchRevision,
   listGists,
@@ -12,7 +17,13 @@ import {
   searchGists,
 } from '@/lib/gist-api';
 import { gistQueryKeys } from '@/lib/query-keys';
-import type { GistType, ListGistsQueryType, RevisionSummaryType, RevisionType } from '@/types';
+import type {
+  FeedCursorType,
+  GistType,
+  ListGistsQueryType,
+  RevisionSummaryType,
+  RevisionType,
+} from '@/types';
 
 /**
  * Reads one gist.
@@ -39,6 +50,43 @@ export function useGistList(query: ListGistsQueryType = {}): UseQueryResult<Gist
   return useQuery({
     queryKey: gistQueryKeys.list(query),
     queryFn: () => listGists(query),
+  });
+}
+
+/** How many gists a page of the feed holds. */
+const PAGE_SIZE = 20;
+
+/**
+ * The feed, one page at a time.
+ *
+ * Pages are keyset-based: the cursor is the created_at of the last gist on the page
+ * before, which the API takes as `before`. Offsets were the alternative and get
+ * slower the further you read, as well as skipping or repeating a row whenever
+ * something is published while somebody is paging.
+ *
+ * A page shorter than PAGE_SIZE is the last one, which saves the request that would
+ * otherwise be needed to discover the end.
+ */
+export function useGistFeed(
+  query: ListGistsQueryType = {},
+): UseInfiniteQueryResult<GistType[], ApiError> {
+  return useInfiniteQuery({
+    queryKey: gistQueryKeys.feed(query),
+    queryFn: ({ pageParam }) =>
+      listGists({
+        ...query,
+        limit: PAGE_SIZE,
+        ...(pageParam ? { before: pageParam.before, beforeSlug: pageParam.beforeSlug } : {}),
+      }),
+    initialPageParam: null as FeedCursorType | null,
+    getNextPageParam: (lastPage): FeedCursorType | undefined => {
+      const last = lastPage[lastPage.length - 1];
+      if (lastPage.length < PAGE_SIZE || !last) {
+        return undefined;
+      }
+      return { before: last.createdAt, beforeSlug: last.slug };
+    },
+    select: (data) => data.pages.flat(),
   });
 }
 
@@ -89,6 +137,24 @@ export function useRestoreRevision(): UseMutationResult<GistType, ApiError, Rest
     onSuccess: (gist) => {
       queryClient.setQueryData(gistQueryKeys.detail(gist.slug), gist);
       void queryClient.invalidateQueries({ queryKey: gistQueryKeys.revisions(gist.slug) });
+    },
+  });
+}
+
+/**
+ * Deletes a gist.
+ *
+ * The cached detail is removed rather than invalidated, because a refetch of a gist
+ * that no longer exists is a 404 the page would have to handle for no reason.
+ */
+export function useDeleteGist(): UseMutationResult<void, ApiError, string> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteGist,
+    onSuccess: (_result, slug) => {
+      queryClient.removeQueries({ queryKey: gistQueryKeys.detail(slug) });
+      void queryClient.invalidateQueries({ queryKey: gistQueryKeys.all });
     },
   });
 }

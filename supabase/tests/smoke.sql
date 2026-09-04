@@ -21,7 +21,11 @@ declare
     pub_slug   text;
     priv_slug  text;
     blob_slug  text;
-    rev_slug   text;
+    rev_slug    text;
+    page        jsonb;
+    cursor_ts   timestamptz;
+    cursor_slug text;
+    total       int;
     payload    jsonb;
     handle     text;
     n          int;
@@ -301,6 +305,52 @@ begin
     perform set_config('request.jwt.claims', null, true);
     assert list_revisions(rev_slug) is null,
         'a private gist exposed its history to an anonymous caller';
+
+    -- ---- keyset paging and search ------------------------------------------
+    -- Two gists created in the same instant must not fall on the same side of a
+    -- cursor: created_at alone put them there and the second page lost them.
+    perform set_config('request.jwt.claims', null, true);
+
+    for n in 1..5 loop
+        payload := create_gist(
+            p_title      => 'Paged ' || n,
+            p_visibility => 'public',
+            p_files      => '[{"filename":"p.md","content":"x"}]'::jsonb
+        );
+    end loop;
+
+    total := jsonb_array_length(list_gists(null, 100, null));
+
+    page := list_gists(null, 3, null);
+    assert jsonb_array_length(page) = 3,
+        format('first page held %s rows, expected 3', jsonb_array_length(page));
+
+    cursor_ts := ((page -> -1) ->> 'created_at')::timestamptz;
+    cursor_slug := (page -> -1) ->> 'slug';
+
+    n := jsonb_array_length(list_gists(null, 100, cursor_ts, cursor_slug));
+    assert n = total - 3,
+        format('the page after the cursor held %s rows, expected the remaining %s', n, total - 3);
+
+    -- The same cursor without its slug is the bug this replaced: every row sharing
+    -- the boundary timestamp fell on the wrong side of a strict comparison.
+    assert jsonb_array_length(list_gists(null, 100, cursor_ts, null)) < n,
+        'a timestamp-only cursor no longer loses rows, so the slug half is untested';
+
+    -- Search matches a prefix, because somebody is still typing.
+    assert jsonb_array_length(search_gists('page')) = 5,
+        'search did not match the whole word';
+    assert jsonb_array_length(search_gists('pag')) = 5,
+        'search did not match a prefix of the word';
+    assert jsonb_array_length(search_gists('&!')) = 0,
+        'punctuation alone matched something';
+    assert jsonb_array_length(search_gists('')) = 0,
+        'an empty search matched something';
+
+    -- A search result is a summary: sending every matched document would make a
+    -- search of a large corpus a download.
+    assert not ((search_gists('page') -> 0 -> 'files' -> 0) ? 'content'),
+        'search returned file contents';
 
     raise notice 'ALL ASSERTIONS PASSED';
 end;

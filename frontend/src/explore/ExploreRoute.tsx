@@ -7,18 +7,23 @@ import { OfflineBand } from '@/chrome/OfflineBand';
 import { PageHeader } from '@/chrome/PageHeader';
 import { CommandPalette } from '@/command/CommandPalette';
 import { GistList } from '@/explore/GistList';
+import { LoadMore } from '@/explore/LoadMore';
 import { SearchField } from '@/explore/SearchField';
 import { isNetworkError } from '@/lib/network-error';
-import { useGistList, useGistSearch } from '@/lib/use-gist-queries';
+import { useDebouncedValue } from '@/lib/use-debounced-value';
+import { useGistFeed, useGistSearch } from '@/lib/use-gist-queries';
+
+const SEARCH_DEBOUNCE_MS = 250;
 
 export function ExploreRoute() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const searchFieldRef = useRef<HTMLInputElement>(null);
+  const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
   const isSearching = query.trim().length > 0;
 
-  const feed = useGistList({ limit: 30 });
-  const search = useGistSearch(query);
+  const feed = useGistFeed();
+  const search = useGistSearch(debouncedQuery);
   const active = isSearching ? search : feed;
 
   return (
@@ -34,6 +39,7 @@ export function ExploreRoute() {
           feed.data ? (
             <p className="font-mono text-[11px] text-[var(--faint)]">
               {feed.data.length} {feed.data.length === 1 ? 'gist' : 'gists'}
+              {feed.hasNextPage ? ' loaded' : ''}
             </p>
           ) : null
         }
@@ -74,6 +80,14 @@ export function ExploreRoute() {
               </EmptyState>
             )
           }
+        />
+      ) : null}
+
+      {!isSearching && feed.data && feed.data.length > 0 ? (
+        <LoadMore
+          hasMore={feed.hasNextPage}
+          isLoading={feed.isFetchingNextPage}
+          onLoad={() => void feed.fetchNextPage()}
         />
       ) : null}
 

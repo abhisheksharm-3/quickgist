@@ -52,6 +52,15 @@ type Gist struct {
 	Files       []File     `json:"files"`
 }
 
+// Cursor is a page boundary in the gist feed.
+//
+// Both halves are needed. created_at alone is not unique, and comparing on it alone
+// dropped every gist that shared a timestamp with the last row of the page before.
+type Cursor struct {
+	Before     *time.Time
+	BeforeSlug *string
+}
+
 // NewFile is an incoming file on create or replace. RetentionDays applies only to an
 // upload and is capped at MaxRetentionDays by the database regardless of its value.
 type NewFile struct {

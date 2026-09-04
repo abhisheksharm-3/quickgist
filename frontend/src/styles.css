@@ -37,6 +37,7 @@
     --faint: #585d67;
     --blue-field: #2846e8;
     --blue-action: #3b82f6;
+    --danger: #d0342c;
   }
 
   [data-theme='light'] {
@@ -103,6 +104,24 @@
   background-image:
     repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px var(--grid-size)),
     repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px var(--grid-size));
+}
+
+/*
+  The confirmation dialog.
+
+  A native dialog, so the focus trap, the backdrop and Escape are the platform's.
+  Only the centring and the backdrop tint are set here; the panel inside carries its
+  own borders like every other surface.
+*/
+.confirm-dialog {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: min(30rem, calc(100vw - 2rem));
+}
+
+.confirm-dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
 }
 
 /*

@@ -6,12 +6,19 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
+
+// slugPattern is what generate_slug() produces: twelve characters from a 32-symbol
+// alphabet. A cursor's slug is checked against it rather than passed through, so a
+// crafted value reaches the query as a rejected request instead of a comparison.
+var slugPattern = regexp.MustCompile(`^[a-z0-9]{4,32}$`)
 
 const (
 	maxJSONBody     = 2 << 20
@@ -131,17 +138,40 @@ func pageSize(raw string) int {
 	return n
 }
 
-// parseBefore reads a keyset pagination cursor.
-func parseBefore(raw string) (*time.Time, error) {
+// parseCursor reads a keyset pagination cursor from the query.
+//
+// Both halves travel together: a timestamp without the slug that goes with it cannot
+// order rows created in the same instant, and the page after such a boundary silently
+// dropped every one of them.
+func parseCursor(q url.Values) (store.Cursor, error) {
+	raw := q.Get("before")
 	if raw == "" {
-		return nil, nil
+		return store.Cursor{}, nil
 	}
 
-	t, err := time.Parse(time.RFC3339, raw)
+	at, err := time.Parse(time.RFC3339Nano, raw)
 	if err != nil {
-		return nil, errors.New("before must be an RFC3339 timestamp")
+		return store.Cursor{}, errors.New("before must be an RFC3339 timestamp")
 	}
-	return &t, nil
+
+	cursor := store.Cursor{Before: &at}
+
+	if slug := q.Get("beforeSlug"); slug != "" {
+		if err := validSlug(slug); err != nil {
+			return store.Cursor{}, err
+		}
+		cursor.BeforeSlug = &slug
+	}
+
+	return cursor, nil
+}
+
+// validSlug rejects anything that cannot be a slug this service issued.
+func validSlug(slug string) error {
+	if !slugPattern.MatchString(slug) {
+		return errors.New("beforeSlug is not a slug")
+	}
+	return nil
 }
 
 // parseRetentionDays reads an upload's requested retention.

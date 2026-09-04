@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/url"
 	"strings"
 	"testing"
 
@@ -76,35 +77,52 @@ func TestParseRetentionDays(t *testing.T) {
 	}
 }
 
-func TestParseBefore(t *testing.T) {
+func TestParseCursor(t *testing.T) {
 	cases := []struct {
-		name    string
-		raw     string
-		wantNil bool
-		wantErr bool
+		name     string
+		before   string
+		slug     string
+		wantNil  bool
+		wantSlug bool
+		wantErr  bool
 	}{
-		{name: "absent", raw: "", wantNil: true},
-		{name: "rfc3339", raw: "2026-09-04T12:00:00Z"},
-		{name: "rfc3339 with offset", raw: "2026-09-04T12:00:00+05:30"},
-		{name: "date only", raw: "2026-09-04", wantErr: true},
-		{name: "nonsense", raw: "yesterday", wantErr: true},
+		{name: "absent", wantNil: true},
+		{name: "rfc3339", before: "2026-09-04T12:00:00Z"},
+		{name: "with nanoseconds", before: "2026-09-04T12:00:00.123456Z"},
+		{name: "with offset", before: "2026-09-04T12:00:00+05:30"},
+		{name: "with slug", before: "2026-09-04T12:00:00Z", slug: "6biqbxj7v8a4", wantSlug: true},
+		{name: "date only", before: "2026-09-04", wantErr: true},
+		{name: "nonsense", before: "yesterday", wantErr: true},
+		{name: "slug with a path in it", before: "2026-09-04T12:00:00Z", slug: "../../etc", wantErr: true},
+		{name: "slug with punctuation", before: "2026-09-04T12:00:00Z", slug: "abc-def", wantErr: true},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := parseBefore(tc.raw)
+			q := url.Values{}
+			if tc.before != "" {
+				q.Set("before", tc.before)
+			}
+			if tc.slug != "" {
+				q.Set("beforeSlug", tc.slug)
+			}
+
+			got, err := parseCursor(q)
 
 			if tc.wantErr {
 				if err == nil {
-					t.Errorf("parseBefore(%q) accepted an unparseable value", tc.raw)
+					t.Errorf("parseCursor(%q, %q) accepted an unusable cursor", tc.before, tc.slug)
 				}
 				return
 			}
 			if err != nil {
-				t.Fatalf("parseBefore(%q): %v", tc.raw, err)
+				t.Fatalf("parseCursor(%q, %q): %v", tc.before, tc.slug, err)
 			}
-			if tc.wantNil != (got == nil) {
-				t.Errorf("parseBefore(%q) nil = %v, want %v", tc.raw, got == nil, tc.wantNil)
+			if tc.wantNil != (got.Before == nil) {
+				t.Errorf("Before nil = %v, want %v", got.Before == nil, tc.wantNil)
+			}
+			if tc.wantSlug != (got.BeforeSlug != nil) {
+				t.Errorf("BeforeSlug set = %v, want %v", got.BeforeSlug != nil, tc.wantSlug)
 			}
 		})
 	}
