@@ -40,6 +40,15 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         value: https://quickgist.vercel.app
 
+      # The frontend, for the link the paste endpoint answers with.
+      - key: PUBLIC_BASE_URL
+        value: https://quickgist.vercel.app
+
+      # This service's own name, for the preview card inside a cacheable document.
+      # Without it the card URL comes from the request's Host header.
+      - key: API_BASE_URL
+        value: https://quickgist-api.onrender.com
+
       # Render terminates TLS and forwards one X-Forwarded-For hop. At 0 the rate
       # limiter keys every request to the proxy's address and one caller can exhaust
       # everyone's budget.

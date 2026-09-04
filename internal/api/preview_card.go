@@ -61,10 +61,11 @@ func (a *API) PreviewHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageURL := a.cfg.PublicBaseURL + "/g/" + slug
-	imageURL := requestBaseURL(r) + "/v1/gists/" + slug + "/og.png"
+	imageURL := a.apiBaseURL(r) + "/v1/gists/" + slug + "/og.png"
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", previewCacheControl)
+	w.Header().Set("Vary", "Host")
 	w.WriteHeader(http.StatusOK)
 
 	if _, err := io.WriteString(w, previewDocument(gist, pageURL, imageURL)); err != nil {
@@ -102,13 +103,23 @@ func previewDocument(gist *store.Gist, pageURL, imageURL string) string {
 	return b.String()
 }
 
-// requestBaseURL is where this service is reachable, as the request itself reports.
+// apiBaseURL is where this service is reachable, for naming the card in a document
+// that is cacheable.
 //
-// The card lives on the API's origin, not the frontend's, and the API does not know
-// its own public name: it is behind a proxy that rewrites the port. Taking it from
-// the request means one fewer environment variable to get wrong. The Host header is
-// the client's to choose, which is harmless here because the value only reaches the
-// og:image of the document answering that same request.
+// API_BASE_URL is preferred and the request's own Host is only a fallback, because
+// Host is the client's to choose and this document is served with a public
+// Cache-Control. A shared cache keyed on the path alone would otherwise let one
+// crafted request store a preview whose og:image points wherever its sender liked,
+// for every crawler that asked afterwards. The fallback still ships Vary: Host, so
+// a cache that honours it keys the two apart.
+func (a *API) apiBaseURL(r *http.Request) string {
+	if a.cfg.APIBaseURL != "" {
+		return a.cfg.APIBaseURL
+	}
+	return requestBaseURL(r)
+}
+
+// requestBaseURL is the origin the request itself reports.
 func requestBaseURL(r *http.Request) string {
 	scheme := "http"
 	if forwarded := r.Header.Get("X-Forwarded-Proto"); forwarded != "" {

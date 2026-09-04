@@ -43,6 +43,11 @@ type Config struct {
 	// endpoint's response, and the canonical URL on a link preview.
 	PublicBaseURL string
 
+	// APIBaseURL is where this service itself is reachable, used to name the
+	// preview card in a cacheable document. Empty means fall back to the request's
+	// own Host, which is the client's to choose.
+	APIBaseURL string
+
 	RateLimitRPS     int
 	RateLimitBurst   int
 	RateLimitEnabled bool
@@ -100,6 +105,7 @@ func Load(version string) (*Config, error) {
 	}
 
 	c.PublicBaseURL = strings.TrimSuffix(env("PUBLIC_BASE_URL", firstOrigin(c.AllowedOrigins)), "/")
+	c.APIBaseURL = strings.TrimSuffix(os.Getenv("API_BASE_URL"), "/")
 
 	if err := c.validate(); err != nil {
 		return nil, err
