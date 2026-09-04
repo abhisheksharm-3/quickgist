@@ -46,8 +46,10 @@ services:
 
       # This service's own name, for the preview card inside a cacheable document.
       # Without it the card URL comes from the request's Host header.
+      # Replace with this service's own URL once Render has assigned it. A Render
+      # subdomain is global, so a guessed name is somebody else's service.
       - key: API_BASE_URL
-        value: https://quickgist-api.onrender.com
+        sync: false
 
       # Render terminates TLS and forwards one X-Forwarded-For hop. At 0 the rate
       # limiter keys every request to the proxy's address and one caller can exhaust

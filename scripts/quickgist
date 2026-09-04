@@ -10,12 +10,17 @@
 #
 # The link is printed on stdout and nothing else is, so it pipes into pbcopy.
 #
-# QUICKGIST_API sets the endpoint, defaulting to production. QUICKGIST_TOKEN is an
-# access token, needed only for a private gist; without one the gist is anonymous,
-# which is what the web editor does too.
+# QUICKGIST_API is required and is the base URL of your own deployment. There is no
+# default on purpose: a wrong one would post the file you are sharing to somebody
+# else's server. QUICKGIST_TOKEN is an access token, needed only for a private gist;
+# without one the gist is anonymous, which is what the web editor does too.
 set -euo pipefail
 
-API="${QUICKGIST_API:-https://quickgist-api.onrender.com}"
+API="${QUICKGIST_API:-}"
+if [ -z "$API" ]; then
+	echo "quickgist: set QUICKGIST_API to your deployment, e.g. https://quickgist-api.onrender.com" >&2
+	exit 2
+fi
 filename=""
 visibility="unlisted"
 expires=""
