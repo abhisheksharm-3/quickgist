@@ -1,3 +1,4 @@
+// Package config loads runtime configuration from the environment.
 package config
 
 import (
@@ -10,118 +11,166 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config holds all application configuration.
+// envFiles are read in order, so a real credential in .env.local overrides a shared
+// default in .env. Only .env.local is gitignored.
+var envFiles = []string{".env.local", ".env"}
+
+// Config is the whole of the application's configuration.
+//
+// TrustedProxies is the number of proxy hops in front of this server, used to read
+// a client address out of X-Forwarded-For. It defaults to zero, meaning trust no
+// forwarding header, because trusting one nobody strips lets any caller forge its
+// own rate-limit bucket.
 type Config struct {
-	Server    ServerConfig
-	Firebase  FirebaseConfig
-	CORS      CORSConfig
-	RateLimit RateLimitConfig
+	Port            string
+	Env             string
+	ReadTimeout     time.Duration
+	WriteTimeout    time.Duration
+	IdleTimeout     time.Duration
+	ShutdownTimeout time.Duration
+
+	DatabaseURL   string
+	MaxConns      int32
+	SupabaseURL   string
+	ServiceKey    string
+	StorageBucket string
+
+	AllowedOrigins []string
+
+	RateLimitRPS     int
+	RateLimitBurst   int
+	RateLimitEnabled bool
+	TrustedProxies   int
+
+	SentryDSN      string
+	OTLPEndpoint   string
+	ServiceName    string
+	ServiceVersion string
 }
 
-// Load reads configuration from environment variables.
-func Load() (*Config, error) {
-	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
-		return nil, fmt.Errorf("loading .env file: %w", err)
-	}
+// Development reports whether the server is running outside production.
+func (c *Config) Development() bool { return c.Env != "production" }
 
-	serverCfg, err := loadServerConfig()
-	if err != nil {
+// JWKSURL is where Supabase publishes the public keys for access tokens.
+func (c *Config) JWKSURL() string {
+	return c.SupabaseURL + "/auth/v1/.well-known/jwks.json"
+}
+
+// Issuer is the iss claim Supabase puts in access tokens.
+func (c *Config) Issuer() string { return c.SupabaseURL + "/auth/v1" }
+
+// Load reads configuration and reports every missing requirement at once, rather
+// than failing on the first one and hiding the rest.
+func Load(version string) (*Config, error) {
+	if err := loadEnvFiles(); err != nil {
 		return nil, err
 	}
 
-	firebaseCfg, err := loadFirebaseConfig()
-	if err != nil {
+	c := &Config{
+		Port:            withColon(env("PORT", "8000")),
+		Env:             env("APP_ENV", "development"),
+		ReadTimeout:     duration("READ_TIMEOUT", 10*time.Second),
+		WriteTimeout:    duration("WRITE_TIMEOUT", 30*time.Second),
+		IdleTimeout:     duration("IDLE_TIMEOUT", 120*time.Second),
+		ShutdownTimeout: duration("SHUTDOWN_TIMEOUT", 20*time.Second),
+
+		DatabaseURL:   os.Getenv("DATABASE_URL"),
+		MaxConns:      int32(integer("DB_MAX_CONNS", 10)),
+		SupabaseURL:   strings.TrimSuffix(os.Getenv("SUPABASE_URL"), "/"),
+		ServiceKey:    os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
+		StorageBucket: env("SUPABASE_STORAGE_BUCKET", "gist-files"),
+
+		AllowedOrigins: list("CORS_ALLOWED_ORIGINS", "http://localhost:5173"),
+
+		RateLimitRPS:     integer("RATE_LIMIT_RPS", 10),
+		RateLimitBurst:   integer("RATE_LIMIT_BURST", 20),
+		RateLimitEnabled: env("RATE_LIMIT_ENABLED", "true") == "true",
+		TrustedProxies:   integer("TRUSTED_PROXIES", 0),
+
+		SentryDSN:      os.Getenv("SENTRY_DSN"),
+		OTLPEndpoint:   os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
+		ServiceName:    env("OTEL_SERVICE_NAME", "quickgist-api"),
+		ServiceVersion: version,
+	}
+
+	if err := c.validate(); err != nil {
 		return nil, err
 	}
-
-	return &Config{
-		Server:    serverCfg,
-		Firebase:  firebaseCfg,
-		CORS:      loadCORSConfig(),
-		RateLimit: loadRateLimitConfig(),
-	}, nil
+	return c, nil
 }
 
-func loadServerConfig() (ServerConfig, error) {
-	port := getEnv("PORT", "8000")
-	if !strings.HasPrefix(port, ":") {
-		port = ":" + port
+// validate reports the required values that are absent.
+func (c *Config) validate() error {
+	required := map[string]string{
+		"DATABASE_URL":              c.DatabaseURL,
+		"SUPABASE_URL":              c.SupabaseURL,
+		"SUPABASE_SERVICE_ROLE_KEY": c.ServiceKey,
 	}
 
-	return ServerConfig{
-		Port:            port,
-		Env:             getEnv("APP_ENV", "development"),
-		ReadTimeout:     getDuration("READ_TIMEOUT", 10*time.Second),
-		WriteTimeout:    getDuration("WRITE_TIMEOUT", 30*time.Second),
-		IdleTimeout:     getDuration("IDLE_TIMEOUT", 120*time.Second),
-		ShutdownTimeout: getDuration("SHUTDOWN_TIMEOUT", 30*time.Second),
-		MaxHeaderBytes:  getInt("MAX_HEADER_BYTES", 1<<20),
-	}, nil
+	var missing []string
+	for name, value := range required {
+		if value == "" {
+			missing = append(missing, name)
+		}
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("missing required configuration: %s", strings.Join(missing, ", "))
+	}
+	return nil
 }
 
-func loadFirebaseConfig() (FirebaseConfig, error) {
-	credPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-	if credPath == "" {
-		return FirebaseConfig{}, fmt.Errorf("GOOGLE_APPLICATION_CREDENTIALS not set")
+// loadEnvFiles reads the dotenv files, tolerating their absence.
+func loadEnvFiles() error {
+	for _, f := range envFiles {
+		if err := godotenv.Load(f); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("load %s: %w", f, err)
+		}
 	}
-
-	projectID := os.Getenv("FIREBASE_PROJECT_ID")
-	if projectID == "" {
-		return FirebaseConfig{}, fmt.Errorf("FIREBASE_PROJECT_ID not set")
-	}
-
-	return FirebaseConfig{
-		CredentialsPath: credPath,
-		ProjectID:       projectID,
-		StorageBucket:   getEnv("FIREBASE_STORAGE_BUCKET", projectID+".appspot.com"),
-		MaxRetries:      getInt("FIRESTORE_MAX_RETRIES", 3),
-	}, nil
+	return nil
 }
 
-func loadCORSConfig() CORSConfig {
-	originsStr := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,https://quickgist.vercel.app")
-	origins := strings.Split(originsStr, ",")
-	for i := range origins {
-		origins[i] = strings.TrimSpace(origins[i])
+// withColon normalises a port into the form http.Server expects.
+func withColon(port string) string {
+	if strings.HasPrefix(port, ":") {
+		return port
 	}
-
-	return CORSConfig{
-		AllowedOrigins: origins,
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Content-Type", "Authorization"},
-		AllowCredentials: true,
-	}
+	return ":" + port
 }
 
-func loadRateLimitConfig() RateLimitConfig {
-	return RateLimitConfig{
-		RequestsPerSecond: getInt("RATE_LIMIT_RPS", 10),
-		BurstSize:         getInt("RATE_LIMIT_BURST", 20),
-		Enabled:           getEnv("RATE_LIMIT_ENABLED", "true") == "true",
-	}
-}
-
-func getEnv(key, defaultValue string) string {
+// env returns an environment variable, or fallback when it is unset or empty.
+func env(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
 	}
-	return defaultValue
+	return fallback
 }
 
-func getDuration(key string, defaultValue time.Duration) time.Duration {
-	if v := os.Getenv(key); v != "" {
-		if d, err := time.ParseDuration(v); err == nil {
-			return d
-		}
+// integer reads an integer variable, falling back on anything unparseable.
+func integer(key string, fallback int) int {
+	if v, err := strconv.Atoi(os.Getenv(key)); err == nil {
+		return v
 	}
-	return defaultValue
+	return fallback
 }
 
-func getInt(key string, defaultValue int) int {
-	if v := os.Getenv(key); v != "" {
-		if i, err := strconv.Atoi(v); err == nil {
-			return i
+// duration reads a Go duration string, falling back on anything unparseable.
+func duration(key string, fallback time.Duration) time.Duration {
+	if d, err := time.ParseDuration(os.Getenv(key)); err == nil {
+		return d
+	}
+	return fallback
+}
+
+// list reads a comma-separated variable into trimmed, non-empty entries.
+func list(key, fallback string) []string {
+	parts := strings.Split(env(key, fallback), ",")
+	out := make([]string, 0, len(parts))
+
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
 		}
 	}
-	return defaultValue
+	return out
 }
