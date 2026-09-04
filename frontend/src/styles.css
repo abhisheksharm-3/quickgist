@@ -1,53 +1,489 @@
 @import 'tailwindcss';
 
+@theme {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: 'IBM Plex Serif', Georgia, serif;
+}
+
 /*
-  Slice 1 carries no visual design. These are the tokens the rendered gist HTML
-  needs, since that markup comes from the server and cannot be styled with utility
-  classes. The rest of the design arrives in slice 2.
+  The visual system. Tokens are declared for light on bare :root so a colour is
+  never defined only inside a media query, then overridden for the two dark
+  conditions. Rendered gist HTML comes from the server and cannot carry utility
+  classes, so .gist-prose styles it by element.
 */
 @layer base {
   :root {
     color-scheme: light dark;
+
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-serif: 'IBM Plex Serif', Georgia, serif;
+
+    --grid: rgb(255 255 255 / 2.2%);
+    --grid-size: 26px;
+    --chrome-h: 54px;
+
+    /* Dark is the default surface; light overrides it below. */
+    --bg: #0d0f13;
+    --panel: #16181d;
+    --panel-2: #1b1e24;
+    --border: #24272e;
+    --border-strong: #2f333c;
+    --heading: #eceef2;
+    --text: #d6d9df;
+    --body: #b9bec7;
+    --dim: #8b909a;
+    --faint: #585d67;
+    --blue-field: #2846e8;
+    --blue-action: #3b82f6;
+  }
+
+  [data-theme='light'] {
+    --grid: rgb(0 0 0 / 2.8%);
+    --bg: #fafafa;
+    --panel: #f2f2f3;
+    --panel-2: #eeeef0;
+    --border: #e2e2e4;
+    --border-strong: #d0d0d3;
+    --heading: #22242b;
+    --text: #383a41;
+    --body: #4a4c53;
+    --dim: #7c7f88;
+    --faint: #a2a3a7;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme='dark']) {
+      --grid: rgb(0 0 0 / 2.8%);
+      --bg: #fafafa;
+      --panel: #f2f2f3;
+      --panel-2: #eeeef0;
+      --border: #e2e2e4;
+      --border-strong: #d0d0d3;
+      --heading: #22242b;
+      --text: #383a41;
+      --body: #4a4c53;
+      --dim: #7c7f88;
+      --faint: #a2a3a7;
+    }
   }
 }
 
-.gist-prose :where(h1, h2, h3, h4) {
-  font-weight: 600;
-  margin-block: 0.8em 0.4em;
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--blue-action) 32%, transparent);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--blue-action);
+    outline-offset: 1px;
+  }
 }
 
-.gist-prose :where(p, ul, ol, pre, table) {
-  margin-block: 0.6em;
+/*
+  Zed's blueprint texture: two hairline grids, barely there, covering the viewport
+  rather than a card.
+*/
+.app-grid {
+  background-image:
+    repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px var(--grid-size)),
+    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px var(--grid-size));
+}
+
+/*
+  The blue field's grid.
+
+  Its cells are a fraction of the field's own width rather than a fixed 26px, so the
+  vertical lines land exactly on the quarter points where the footer's column
+  dividers are. With a fixed cell the two sets of lines were unrelated and the
+  dividers cut through the matrix at an arbitrary offset. Container query units are
+  what make the same length usable on both axes, which keeps the cells square.
+*/
+.blueprint-field {
+  container-type: inline-size;
+}
+
+.blueprint-cells {
+  --cell: calc(100cqw / 72);
+  background-image:
+    repeating-linear-gradient(to right, rgb(255 255 255 / 9%) 0 1px, transparent 1px var(--cell)),
+    repeating-linear-gradient(to bottom, rgb(255 255 255 / 9%) 0 1px, transparent 1px var(--cell));
+}
+
+/*
+  Corner crosshairs on a pane boundary. Drawn with two gradients per corner so a
+  pane needs no extra elements to carry them.
+*/
+.pane-ticks {
+  position: relative;
+}
+
+.pane-ticks::before,
+.pane-ticks::after {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--border-strong), var(--border-strong)),
+    linear-gradient(var(--border-strong), var(--border-strong));
+  background-size: 1px 7px, 7px 1px;
+  background-position: center top, left center;
+  background-repeat: no-repeat;
+}
+
+.pane-ticks::before {
+  top: -4px;
+  left: -4px;
+}
+
+.pane-ticks::after {
+  bottom: -4px;
+  right: -4px;
+}
+
+/*
+  The editor is a fixed pane whose text scrolls inside it, which is how an editor
+  behaves: the tabs and the publish bar stay put while the content moves. Growing the
+  pane instead dragged both off the top of the screen.
+*/
+.source-pane {
+  height: 100%;
+  overflow-y: auto;
+}
+
+/*
+  The mobile navigation sheet.
+
+  It is a native dialog, so the focus trap and backdrop are the platform's.
+  @starting-style gives the entry somewhere to animate from, and allow-discrete on
+  display and overlay keeps it painted long enough to animate back out.
+*/
+.mobile-sheet {
+  position: fixed;
+  inset: 0;
+  display: none;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.mobile-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-sheet-dismiss {
+  flex: 1;
+  min-height: 3rem;
+  cursor: default;
+}
+
+.mobile-sheet-panel {
+  max-height: 85dvh;
+  overflow-y: auto;
+  translate: 0 100%;
+  transition: translate 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.mobile-sheet[open] .mobile-sheet-panel {
+  translate: 0 0;
+}
+
+@starting-style {
+  .mobile-sheet[open] .mobile-sheet-panel {
+    translate: 0 100%;
+  }
+}
+
+.mobile-sheet::backdrop {
+  background: rgb(0 0 0 / 55%);
+  opacity: 0;
+  transition:
+    opacity 180ms ease,
+    display 180ms allow-discrete,
+    overlay 180ms allow-discrete;
+}
+
+.mobile-sheet[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  .mobile-sheet[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-sheet-panel,
+  .mobile-sheet::backdrop {
+    transition-duration: 1ms;
+  }
+
+  .mobile-sheet-panel {
+    translate: 0 0;
+  }
+}
+
+/* The one place the reading measure is constrained, and only for prose. */
+.reading-measure {
+  max-width: 68ch;
+}
+
+/*
+  Rendered gist HTML.
+
+  The markup arrives from the server with no classes of its own, so everything here
+  selects by element. It is a document stylesheet rather than a component one: a
+  heading scale you can actually see, a vertical rhythm in ems so it holds at any
+  size, and hairlines instead of boxes.
+*/
+.gist-prose {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+
+.gist-prose > :first-child {
+  margin-block-start: 0;
+}
+
+.gist-prose :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--heading);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-block: 1.9em 0.55em;
+  scroll-margin-top: 4rem;
+}
+
+.gist-prose :where(h1) {
+  font-size: 1.9em;
+  letter-spacing: -0.03em;
+  padding-block-end: 0.3em;
+  border-block-end: 1px solid var(--border);
+}
+
+.gist-prose :where(h2) {
+  font-size: 1.42em;
+  letter-spacing: -0.025em;
+}
+
+.gist-prose :where(h3) {
+  font-size: 1.16em;
+}
+
+.gist-prose :where(h4) {
+  font-size: 1em;
+}
+
+.gist-prose :where(h5, h6) {
+  font-family: var(--font-mono);
+  font-size: 0.79em;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.gist-prose :where(p, ul, ol, dl, blockquote, table, pre, details) {
+  margin-block: 1em;
 }
 
 .gist-prose :where(ul, ol) {
-  padding-inline-start: 1.4em;
+  padding-inline-start: 1.5em;
   list-style: revert;
 }
 
+.gist-prose :where(li) {
+  margin-block: 0.25em;
+}
+
+.gist-prose :where(li > ul, li > ol) {
+  margin-block: 0.25em;
+}
+
 .gist-prose :where(a) {
+  color: var(--blue-action);
   text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--blue-action) 45%, transparent);
+  text-underline-offset: 3px;
+}
+
+.gist-prose :where(a):hover {
+  text-decoration-color: currentColor;
+}
+
+.gist-prose :where(strong) {
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.gist-prose :where(hr) {
+  border: 0;
+  border-block-start: 1px solid var(--border);
+  margin-block: 2.2em;
+}
+
+.gist-prose :where(blockquote) {
+  border-inline-start: 2px solid var(--blue-action);
+  padding-inline-start: 1.1em;
+  color: var(--dim);
+}
+
+.gist-prose :where(blockquote) :where(p) {
+  margin-block: 0.4em;
+}
+
+.gist-prose :where(img) {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+}
+
+.gist-prose :where(kbd) {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  border: 1px solid var(--border-strong);
+  padding: 0.1em 0.4em;
 }
 
 .gist-prose :where(code):not(:where(pre code)) {
-  padding: 0.1em 0.3em;
-  border-radius: 0.25rem;
-  background: color-mix(in oklab, currentColor 10%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.15em 0.35em;
+  color: var(--heading);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
 }
 
+/*
+  Code blocks. chroma emits a .chroma wrapper, and inside a fenced block a table
+  whose first cell holds the line numbers, so the padding belongs to the wrapper and
+  never to the pre.
+*/
 .gist-prose :where(pre) {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  line-height: 1.7;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0.85em 1em;
   overflow-x: auto;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
+}
+
+.gist-prose :where(.chroma) {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding-block: 0.85em;
+  overflow-x: auto;
+}
+
+.gist-prose :where(.chroma pre) {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.gist-prose :where(.chroma .lntable) {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-spacing: 0;
+}
+
+.gist-prose :where(.chroma .lntd) {
+  vertical-align: top;
+  padding: 0;
+  border: 0;
+}
+
+.gist-prose :where(.chroma .lntd:first-child) {
+  width: 1%;
+  border-inline-end: 1px solid var(--border);
+}
+
+.gist-prose :where(.chroma .lnt) {
+  display: inline-block;
+  padding-inline: 1em 0.85em;
+  color: var(--faint);
+  user-select: none;
 }
 
 .gist-prose :where(table) {
-  border-collapse: collapse;
   display: block;
+  width: max-content;
+  max-width: 100%;
+  border-collapse: collapse;
   overflow-x: auto;
+  font-size: 0.93em;
 }
 
 .gist-prose :where(th, td) {
-  border: 1px solid color-mix(in oklab, currentColor 20%, transparent);
-  padding: 0.3em 0.6em;
+  border: 1px solid var(--border);
+  padding: 0.45em 0.75em;
+  text-align: start;
+}
+
+.gist-prose :where(th) {
+  background: var(--panel);
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.gist-prose :where(input[type='checkbox']) {
+  margin-inline-end: 0.4em;
+  accent-color: var(--blue-action);
+}
+
+.gist-prose :where(.footnotes) {
+  margin-block-start: 2.4em;
+  padding-block-start: 1.2em;
+  border-block-start: 1px solid var(--border);
+  font-size: 0.9em;
+  color: var(--dim);
+}
+
+/*
+  A mermaid block, before and after the browser draws it. Until then it is a code
+  block like any other; once drawn it holds an SVG that should sit on the page
+  rather than in a scrolling box.
+*/
+.gist-prose :where([data-language='mermaid'][data-mermaid-state='drawn']) {
+  display: flex;
+  justify-content: center;
+  padding: 1.2em;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.gist-prose :where([data-language='mermaid'][data-mermaid-state='drawn'] svg) {
+  max-width: 100%;
+  height: auto;
 }

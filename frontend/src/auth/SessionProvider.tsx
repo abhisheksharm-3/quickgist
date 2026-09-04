@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SessionContext } from '@/auth/session-context';
 import { auth } from '@/lib/supabase-client';
-import type { SessionStateType, SessionUserType } from '@/types';
+import type { SessionStateType, SessionUserType, SignUpProfileType } from '@/types';
 
 type SessionProviderPropsType = {
   children: ReactNode;
@@ -46,13 +46,13 @@ export function SessionProvider({ children }: SessionProviderPropsType) {
     };
   }, []);
 
-  const signInWithGitHub = useCallback(async (): Promise<void> => {
+  const signInWithOAuth = useCallback(async (provider: string): Promise<void> => {
     if (!auth) {
       throw new Error('Authentication is not configured');
     }
 
     const { error } = await auth.signInWithOAuth({
-      provider: 'github',
+      provider: provider as Parameters<typeof auth.signInWithOAuth>[0]['provider'],
       options: { redirectTo: window.location.origin },
     });
     if (error) {
@@ -60,20 +60,57 @@ export function SessionProvider({ children }: SessionProviderPropsType) {
     }
   }, []);
 
-  const signOut = useCallback(async (): Promise<void> => {
+  const signInWithPassword = useCallback(async (email: string, password: string): Promise<void> => {
     if (!auth) {
-      return;
+      throw new Error('Authentication is not configured');
     }
 
-    const { error } = await auth.signOut();
+    const { error } = await auth.signInWithPassword({ email, password });
     if (error) {
       throw error;
     }
   }, []);
 
+  const signUpWithPassword = useCallback(
+    async (email: string, password: string, profile: SignUpProfileType): Promise<void> => {
+      if (!auth) {
+        throw new Error('Authentication is not configured');
+      }
+
+      // handle_new_user() reads user_name and full_name from this metadata, which is
+      // how a password account gets the handle the person actually chose instead of
+      // the local part of their email address.
+      const { error } = await auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: { user_name: profile.handle, full_name: profile.displayName },
+        },
+      });
+      if (error) {
+        throw error;
+      }
+    },
+    [],
+  );
+
+  const signOut = useCallback(async (): Promise<void> => {
+    setUser(null);
+
+    if (!auth) {
+      return;
+    }
+
+    // A local scope clears this browser's session without needing the server to
+    // accept the token. A global sign-out fails outright when the token has already
+    // expired, which left the button doing nothing at exactly the moment it mattered.
+    await auth.signOut({ scope: 'local' });
+  }, []);
+
   const value = useMemo<SessionStateType>(
-    () => ({ user, isLoading, signInWithGitHub, signOut }),
-    [user, isLoading, signInWithGitHub, signOut],
+    () => ({ user, isLoading, signInWithOAuth, signInWithPassword, signUpWithPassword, signOut }),
+    [user, isLoading, signInWithOAuth, signInWithPassword, signUpWithPassword, signOut],
   );
 
   return <SessionContext value={value}>{children}</SessionContext>;

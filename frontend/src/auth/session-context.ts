@@ -2,13 +2,15 @@
 import { createContext } from 'react';
 import type { SessionStateType } from '@/types';
 
-const unavailable = async (): Promise<void> => {
+const unavailable = async (): Promise<never> => {
   throw new Error('Authentication is not configured');
 };
 
 export const SessionContext = createContext<SessionStateType>({
   user: null,
   isLoading: false,
-  signInWithGitHub: unavailable,
+  signInWithOAuth: unavailable,
+  signInWithPassword: unavailable,
+  signUpWithPassword: unavailable,
   signOut: unavailable,
 });

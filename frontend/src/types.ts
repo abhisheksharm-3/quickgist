@@ -50,6 +50,11 @@ export type ListGistsQueryType = {
   before?: string;
 };
 
+export type SignUpProfileType = {
+  handle: string;
+  displayName: string;
+};
+
 export type SessionUserType = {
   id: string;
   email: string | null;
@@ -58,6 +63,12 @@ export type SessionUserType = {
 export type SessionStateType = {
   user: SessionUserType | null;
   isLoading: boolean;
-  signInWithGitHub: () => Promise<void>;
+  signInWithOAuth: (provider: string) => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<void>;
+  signUpWithPassword: (
+    email: string,
+    password: string,
+    profile: SignUpProfileType,
+  ) => Promise<void>;
   signOut: () => Promise<void>;
 };
