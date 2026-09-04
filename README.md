@@ -1,42 +1,103 @@
-# QuickGist
+# quickgist
 
-<p align="center"><img src="https://socialify.git.ci/abhisheksharm-3/quickgist/image?font=KoHo&language=1&name=1&owner=1&pattern=Charlie%20Brown&stargazers=1&theme=Dark" alt="QuickGist"></p>
+Share Markdown and code fast. Paste, get a link, send it. No account needed.
 
-**Share code, text, or files instantly.** No sign up required.
+Markdown and source are rendered on the server, so the browser downloads no syntax
+highlighter: `goldmark` for CommonMark and GFM, `chroma` for around 250 languages,
+`bluemonday` to sanitize the result. Rendered HTML is cached in Postgres and keyed to
+a renderer version, so a deploy that changes rendering invalidates every cached row
+without a migration.
 
-## 🚀 Demo
+## Stack
 
-[quickgist.vercel.app](https://quickgist.vercel.app)
+| Layer | Choice |
+|---|---|
+| API | Go 1.26, `net/http.ServeMux` |
+| Database | Supabase Postgres, accessed only through SQL functions |
+| Auth | Supabase Auth, ES256 access tokens verified against JWKS |
+| Storage | Supabase Storage, private bucket proxied by the API |
+| Rendering | goldmark, chroma, bluemonday |
+| Frontend | React 19, TypeScript 7, Vite 8, Tailwind 4, TanStack Query |
+| Tooling | Biome, golangci-lint |
+| Observability | OpenTelemetry traces, Sentry errors |
 
-## ✨ Features
+## Where the rules live
 
-- **Instant Sharing** - Paste content, get a link in seconds
-- **File Attachments** - Upload files up to 10MB
-- **Syntax Highlighting** - Beautiful code formatting
-- **No Account Required** - Share anonymously or sign in to manage your gists
-- **Dark Theme** - Easy on the eyes
+Authorization is in the database, not in Go. Row-level security decides who can read
+and write each gist, and the API calls SQL functions inside a transaction carrying
+the caller's verified JWT claims, so `auth.uid()` and every policy apply to it too. A
+handler that forgot a check still could not read someone else's private gist.
 
-## 🛠️ Tech Stack
+- `supabase/migrations/0001_init.sql` — tables, constraints, triggers
+- `supabase/migrations/0002_rls.sql` — row-level security policies
+- `supabase/migrations/0003_rpc.sql` — the SQL functions the API calls
+- `supabase/migrations/0004_maintenance.sql` — scheduled cleanup, storage bucket
+- `supabase/tests/smoke.sql` — 40 assertions covering the above
 
-- **Frontend**: React, TypeScript, Vite, Tailwind CSS
-- **UI Components**: shadcn/ui
-- **Authentication**: Clerk
+Three visibilities. `public` gists are listed and searchable. `unlisted` ones are
+reachable only by their 12-character slug, which is 60 bits of entropy, and are
+deliberately excluded from the SELECT policy so a direct query cannot enumerate them.
+`private` ones need to be the author.
 
-## 📦 Getting Started
+Uploads are retained for a caller-chosen number of days, capped at 30. The cap is a
+CHECK constraint rather than a code path, so no insert can exceed it. Deleting any
+file row queues its object for deletion by trigger, and a janitor in the API drains
+that queue, because Postgres cannot reach the bucket.
 
-### Frontend
+## Running it
+
+Requires Go 1.26 and Node 24.
+
+```bash
+cp .env.example .env.local           # fill in DATABASE_URL and the Supabase keys
+psql "$DATABASE_URL" -f supabase/migrations/0001_init.sql
+psql "$DATABASE_URL" -f supabase/migrations/0002_rls.sql
+psql "$DATABASE_URL" -f supabase/migrations/0003_rpc.sql
+psql "$DATABASE_URL" -f supabase/migrations/0004_maintenance.sql
+
+go run ./cmd/server                  # API on :8000
+```
 
 ```bash
 cd frontend
-bun install
-bun dev
+cp .env.example .env.local           # fill in the Supabase URL and publishable key
+npm install
+npm run dev                          # app on :5173, proxying /v1 to :8000
 ```
 
-### Environment Variables
+`DATABASE_URL` must be the pooler connection string. The direct `db.<ref>.supabase.co`
+host publishes an AAAA record only, so it is unreachable from an IPv4-only network.
 
-Create `.env.local` in the frontend directory:
+## Checks
 
+```bash
+go test ./... && golangci-lint run ./...
+psql "$DATABASE_URL" -f supabase/tests/smoke.sql   # runs in a transaction, rolls back
+
+cd frontend && npm run typecheck && npm run lint && npm run build
 ```
-VITE_SERVER_URI=http://localhost:3000
-VITE_CLERK_PUBLISHABLE_KEY=your_clerk_key
+
+## API
+
+| Method | Path | Auth |
+|---|---|---|
+| `GET` | `/v1/health` | — |
+| `GET` | `/v1/highlight.css` | — |
+| `GET` | `/v1/gists` | optional |
+| `GET` | `/v1/gists/search?q=` | — |
+| `POST` | `/v1/gists` | optional, required for `private` |
+| `GET` | `/v1/gists/{slug}` | optional |
+| `PATCH` | `/v1/gists/{slug}` | author |
+| `DELETE` | `/v1/gists/{slug}` | author |
+| `PUT` | `/v1/gists/{slug}/files` | author |
+| `POST` | `/v1/gists/{slug}/files` | author |
+| `GET` | `/v1/gists/{slug}/raw/{filename}` | optional |
+
+Every error has one shape:
+
+```json
+{ "error": { "code": "not_found", "message": "Not Found" } }
 ```
+
+A gist that does not exist and one that is private to somebody else both answer 404,
+because a 403 would confirm the slug is real.
