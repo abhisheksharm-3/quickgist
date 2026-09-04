@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+/*
+  Slice 1 carries no visual design. These are the tokens the rendered gist HTML
+  needs, since that markup comes from the server and cannot be styled with utility
+  classes. The rest of the design arrives in slice 2.
+*/
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+}
+
+.gist-prose :where(h1, h2, h3, h4) {
+  font-weight: 600;
+  margin-block: 0.8em 0.4em;
+}
+
+.gist-prose :where(p, ul, ol, pre, table) {
+  margin-block: 0.6em;
+}
+
+.gist-prose :where(ul, ol) {
+  padding-inline-start: 1.4em;
+  list-style: revert;
+}
+
+.gist-prose :where(a) {
+  text-decoration: underline;
+}
+
+.gist-prose :where(code):not(:where(pre code)) {
+  padding: 0.1em 0.3em;
+  border-radius: 0.25rem;
+  background: color-mix(in oklab, currentColor 10%, transparent);
+}
+
+.gist-prose :where(pre) {
+  overflow-x: auto;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.gist-prose :where(table) {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+.gist-prose :where(th, td) {
+  border: 1px solid color-mix(in oklab, currentColor 20%, transparent);
+  padding: 0.3em 0.6em;
+}
