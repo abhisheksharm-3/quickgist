@@ -1,0 +1,60 @@
+# Render Blueprint for the quickgist API.
+#
+# Create it from the dashboard with New > Blueprint, pointed at this repository.
+# Values marked sync:false are not stored here and are asked for once, on first
+# deploy: the two of them are the database password and the storage key, and neither
+# belongs in git.
+services:
+  - type: web
+    name: quickgist-api
+    runtime: go
+    plan: starter
+    region: singapore
+    healthCheckPath: /v1/health
+    buildCommand: go build -o server ./cmd/server
+    startCommand: ./server
+    envVars:
+      - key: APP_ENV
+        value: production
+
+      # The pooler in session mode, port 5432. Transaction mode (6543) breaks pgx,
+      # which prepares statements by default, and the direct db.<ref>.supabase.co
+      # host is AAAA-only and unreachable from Render.
+      - key: DATABASE_URL
+        sync: false
+
+      - key: SUPABASE_URL
+        value: https://vexeafgfbikwqmxwqypi.supabase.co
+
+      # Used for one thing: authenticating to Supabase Storage, whose bucket is
+      # private. The database is reached with DATABASE_URL under row-level security,
+      # and auth tokens are verified against public JWKS, so neither needs this.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      - key: SUPABASE_STORAGE_BUCKET
+        value: gist-files
+
+      # The browser origin. The default allows localhost only, so sign-in fails
+      # against a deployed frontend until this names it.
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://quickgist.vercel.app
+
+      # Render terminates TLS and forwards one X-Forwarded-For hop. At 0 the rate
+      # limiter keys every request to the proxy's address and one caller can exhaust
+      # everyone's budget.
+      - key: TRUSTED_PROXIES
+        value: 1
+
+      - key: RATE_LIMIT_ENABLED
+        value: true
+      - key: RATE_LIMIT_RPS
+        value: 10
+      - key: RATE_LIMIT_BURST
+        value: 20
+
+      # Optional. Absent means the exporter is disabled, not broken.
+      - key: SENTRY_DSN
+        sync: false
+      - key: OTEL_SERVICE_NAME
+        value: quickgist-api

@@ -47,3 +47,7 @@ dist-ssr
 go.work
 firebase-secrets.json
 .superpowers/
+
+# Worktrees created by background agents
+.claude/worktrees/
+frontend/test-results/
