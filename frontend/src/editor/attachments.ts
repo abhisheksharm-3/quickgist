@@ -8,7 +8,7 @@
  * bucket, which stops at 10 MiB.
  */
 export const MAX_TEXT_BYTES = 1 << 20;
-export const MAX_UPLOAD_BYTES = 10 << 20;
+const MAX_UPLOAD_BYTES = 10 << 20;
 
 export type AttachmentType =
   | { kind: 'text'; filename: string; content: string }
@@ -49,14 +49,4 @@ async function decodeText(file: File): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-export function formatBytes(byteSize: number): string {
-  if (byteSize < 1024) {
-    return `${byteSize} B`;
-  }
-  if (byteSize < 1024 * 1024) {
-    return `${Math.round(byteSize / 1024)} KB`;
-  }
-  return `${(byteSize / (1024 * 1024)).toFixed(1)} MB`;
 }

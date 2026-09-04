@@ -14,6 +14,10 @@ const BUTTON_CLASS = 'code-copy';
  *
  * A block already carrying a button is left alone, which is what makes this safe to
  * run again when the theme changes or the same file is re-rendered.
+ *
+ * The buttons live in DOM React owns, so anything that rewrites the document,
+ * including a diagram being drawn into it, takes them with it. A MutationObserver on
+ * the container puts them back rather than leaving a block without one.
  */
 export function useCodeCopy(container: HTMLElement | null, html: string | undefined): void {
   useEffect(() => {
@@ -23,11 +27,6 @@ export function useCodeCopy(container: HTMLElement | null, html: string | undefi
 
     addButtons(container);
 
-    /*
-     * The buttons live in DOM React owns, so anything that rewrites the document,
-     * including a diagram being drawn into it, takes them with it. Watching the
-     * container puts them back rather than leaving a block without one.
-     */
     const observer = new MutationObserver(() => addButtons(container));
     observer.observe(container, { childList: true, subtree: true });
 

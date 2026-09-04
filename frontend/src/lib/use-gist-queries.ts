@@ -4,27 +4,15 @@ import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api-client';
 import {
-  createGist,
-  deleteGist,
   fetchGist,
   fetchRevision,
   listGists,
   listRevisions,
   restoreRevision,
   searchGists,
-  updateGist,
-  uploadGistFile,
 } from '@/lib/gist-api';
 import { gistQueryKeys } from '@/lib/query-keys';
-import type {
-  CreateGistInputType,
-  GistType,
-  ListGistsQueryType,
-  RevisionSummaryType,
-  RevisionType,
-  UpdateGistInputType,
-  UploadFileInputType,
-} from '@/types';
+import type { GistType, ListGistsQueryType, RevisionSummaryType, RevisionType } from '@/types';
 
 /**
  * Reads one gist.
@@ -59,46 +47,6 @@ export function useGistSearch(q: string): UseQueryResult<GistType[], ApiError> {
     queryKey: gistQueryKeys.search(q),
     queryFn: () => searchGists(q),
     enabled: q.trim().length > 0,
-  });
-}
-
-export function useCreateGist(): UseMutationResult<GistType, ApiError, CreateGistInputType> {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: createGist,
-    onSuccess: (gist) => {
-      queryClient.setQueryData(gistQueryKeys.detail(gist.slug), gist);
-      void queryClient.invalidateQueries({ queryKey: gistQueryKeys.all });
-    },
-  });
-}
-
-type UpdateGistVariablesType = {
-  slug: string;
-  input: UpdateGistInputType;
-};
-
-export function useUpdateGist(): UseMutationResult<GistType, ApiError, UpdateGistVariablesType> {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ slug, input }: UpdateGistVariablesType) => updateGist(slug, input),
-    onSuccess: (gist) => {
-      queryClient.setQueryData(gistQueryKeys.detail(gist.slug), gist);
-      void queryClient.invalidateQueries({ queryKey: gistQueryKeys.all });
-    },
-  });
-}
-
-export function useUploadGistFile(): UseMutationResult<GistType, ApiError, UploadFileInputType> {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: uploadGistFile,
-    onSuccess: (gist) => {
-      queryClient.setQueryData(gistQueryKeys.detail(gist.slug), gist);
-    },
   });
 }
 
@@ -141,18 +89,6 @@ export function useRestoreRevision(): UseMutationResult<GistType, ApiError, Rest
     onSuccess: (gist) => {
       queryClient.setQueryData(gistQueryKeys.detail(gist.slug), gist);
       void queryClient.invalidateQueries({ queryKey: gistQueryKeys.revisions(gist.slug) });
-    },
-  });
-}
-
-export function useDeleteGist(): UseMutationResult<void, ApiError, string> {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteGist,
-    onSuccess: (_result, slug) => {
-      queryClient.removeQueries({ queryKey: gistQueryKeys.detail(slug) });
-      void queryClient.invalidateQueries({ queryKey: gistQueryKeys.all });
     },
   });
 }

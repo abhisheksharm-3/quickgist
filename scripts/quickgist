@@ -16,20 +16,29 @@
 # without one the gist is anonymous, which is what the web editor does too.
 set -euo pipefail
 
-API="${QUICKGIST_API:-}"
-if [ -z "$API" ]; then
-	echo "quickgist: set QUICKGIST_API to your deployment, e.g. https://quickgist-api.onrender.com" >&2
-	exit 2
-fi
+usage() {
+	cat <<'HELP'
+quickgist — share a file or a pipe as a link.
+
+  quickgist notes.md            share a file, keeping its name
+  cat notes.md | quickgist      share stdin as paste.md
+  pbpaste | quickgist -n bug.go name the file yourself
+
+  -n NAME   filename, which decides how the gist is rendered
+  -v LEVEL  unlisted (default), public, or private
+  -e DAYS   delete the gist after DAYS days
+  -t TITLE  title, defaulting to the filename
+
+QUICKGIST_API is required and is the base URL of your own deployment. There is no
+default on purpose: a wrong one would post the file you are sharing to somebody
+else's server. QUICKGIST_TOKEN signs the gist as you, needed only for private.
+HELP
+}
+
 filename=""
 visibility="unlisted"
 expires=""
 title=""
-
-usage() {
-	sed -n '3,16p' "$0" | sed 's/^# \{0,1\}//'
-	exit "${1:-0}"
-}
 
 while getopts ':n:v:e:t:h' option; do
 	case "$option" in
@@ -37,11 +46,23 @@ while getopts ':n:v:e:t:h' option; do
 	v) visibility="$OPTARG" ;;
 	e) expires="$OPTARG" ;;
 	t) title="$OPTARG" ;;
-	h) usage ;;
-	*) usage 1 ;;
+	h)
+		usage
+		exit 0
+		;;
+	*)
+		usage >&2
+		exit 2
+		;;
 	esac
 done
 shift $((OPTIND - 1))
+
+API="${QUICKGIST_API:-}"
+if [ -z "$API" ]; then
+	echo "quickgist: set QUICKGIST_API to your deployment, for example https://your-api.onrender.com" >&2
+	exit 2
+fi
 
 source_file="${1:--}"
 if [ "$source_file" != "-" ] && [ -z "$filename" ]; then

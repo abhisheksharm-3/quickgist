@@ -1,5 +1,6 @@
 /** An uploaded file: its size, and its expiry once the blob storage has cleared it. */
 import { panelId, tabId } from '@/chrome/FileTabs';
+import { formatBytes } from '@/lib/format-bytes';
 import type { GistFileType } from '@/types';
 
 type BinaryFilePropsType = {
@@ -27,14 +28,4 @@ export function BinaryFile({ file }: BinaryFilePropsType) {
       ) : null}
     </section>
   );
-}
-
-function formatBytes(byteSize: number): string {
-  if (byteSize < 1024) {
-    return `${byteSize} bytes`;
-  }
-  if (byteSize < 1024 * 1024) {
-    return `${(byteSize / 1024).toFixed(1)} KB`;
-  }
-  return `${(byteSize / (1024 * 1024)).toFixed(1)} MB`;
 }

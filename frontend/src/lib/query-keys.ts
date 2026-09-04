@@ -12,3 +12,7 @@ export const gistQueryKeys = {
   revisions: (slug: string) => ['gists', 'revisions', slug] as const,
   revision: (slug: string, revision: number) => ['gists', 'revisions', slug, revision] as const,
 };
+
+export const profileQueryKeys = {
+  me: (userId: string | undefined) => ['profile', 'me', userId] as const,
+};

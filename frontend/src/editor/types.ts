@@ -47,7 +47,8 @@ export type UsePreviewResultType = {
   retryAfterSeconds: number | null;
 };
 
+/** What the publish controls collect, as the publish action reads them. */
 export type PublishSettingsType = {
   visibility: VisibilityType;
-  expiresAt: string | null;
+  expiryDays: string;
 };

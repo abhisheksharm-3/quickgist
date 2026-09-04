@@ -107,3 +107,11 @@ describe('editorReducer', () => {
     expected(editorReducer(draft, action));
   });
 });
+
+describe('the draft title', () => {
+  it('is part of the draft, so it survives a reload and travels with a fork', () => {
+    const draft = editorReducer(draftOf(['a.md']), { type: 'title', title: 'Named' });
+    expect(draft.title).toBe('Named');
+    expect(editorReducer(draft, { type: 'add' }).title).toBe('Named');
+  });
+});

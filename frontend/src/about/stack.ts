@@ -40,7 +40,7 @@ export const STACK: StackRowType[] = [
     layer: 'Rendering',
     choice: 'goldmark, chroma, bluemonday, on the server',
     reason:
-      'The browser downloads no syntax highlighter at all. Output is cached in Postgres under a renderer version, so changing how things render invalidates every cached row without a migration.',
+      'The browser downloads no syntax highlighter at all. Output is cached in Postgres under a renderer version, so changing how things render invalidates every cached row without a migration. Mermaid is the one exception, drawn in the browser from a chunk only a document containing a diagram loads.',
   },
   {
     layer: 'Storage',

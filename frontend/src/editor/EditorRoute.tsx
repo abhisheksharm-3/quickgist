@@ -8,35 +8,29 @@
  */
 
 import { Paperclip } from 'lucide-react';
-import { Activity, useActionState, useEffect, useReducer, useRef, useState } from 'react';
+import { Activity, useEffect, useReducer, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { useSession } from '@/auth/use-session';
 import { EmptyState } from '@/chrome/EmptyState';
 import { FileTabs } from '@/chrome/FileTabs';
 import { KeyboardBadge } from '@/chrome/KeyboardBadge';
 import { StatusBar } from '@/chrome/StatusBar';
-import { useHotkeys } from '@/chrome/use-hotkeys';
+import { digitSwitchBindings, useHotkeys } from '@/chrome/use-hotkeys';
 import { AttachmentQueue } from '@/editor/AttachmentQueue';
 import { EditorHero } from '@/editor/EditorHero';
 import { createDraftFromGist, createEmptyDraft, editorReducer } from '@/editor/editor-reducer';
-import { computeExpiresAt, digitSwitchBindings, toFileInputs } from '@/editor/editor-route-helpers';
 import { PreviewPane } from '@/editor/PreviewPane';
 import { PublishControls } from '@/editor/PublishControls';
 import { SourcePane } from '@/editor/SourcePane';
 import type { EditorActionType } from '@/editor/types';
 import { useAttachments } from '@/editor/use-attachments';
-import {
-  clearPersistedDraft,
-  loadPersistedDraft,
-  usePersistDraft,
-} from '@/editor/use-draft-persistence';
-import { createGist, replaceGistFiles, updateGist } from '@/lib/gist-api';
+import { loadPersistedDraft, usePersistDraft } from '@/editor/use-draft-persistence';
+import { usePublish } from '@/editor/use-publish';
+import { updateGist } from '@/lib/gist-api';
 import { useGist } from '@/lib/use-gist-queries';
 import { useMyProfile } from '@/lib/use-my-profile';
 import type { GistType, VisibilityType } from '@/types';
-
-type PublishResultType = { status: 'idle' } | { status: 'error'; message: string };
 
 const TITLE_SAVE_DEBOUNCE_MS = 500;
 
@@ -44,8 +38,6 @@ export function EditorRoute(): React.JSX.Element {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
   const isEditMode = slug !== undefined;
-  const navigate = useNavigate();
-
   const gistQuery = useGist(slug ?? '');
   const persistenceKey = isEditMode ? `edit:${slug}` : 'new';
 
@@ -94,14 +86,6 @@ export function EditorRoute(): React.JSX.Element {
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  /**
-   * The slug of a gist this form already created.
-   *
-   * A publish that creates the gist and then fails to upload one of its files must
-   * be retryable, and retrying without this made a second gist every time.
-   */
-  const createdSlug = useRef<string | undefined>(undefined);
-
   useHotkeys([
     { combo: 'mod+shift+p', handler: () => setIsPreviewVisible((visible) => !visible) },
     { combo: 'mod+enter', handler: () => formRef.current?.requestSubmit() },
@@ -109,47 +93,13 @@ export function EditorRoute(): React.JSX.Element {
     ...digitSwitchBindings((index) => dispatch({ type: 'switch', index })),
   ]);
 
-  const [publishResult, publishAction, isPublishing] = useActionState<PublishResultType>(
-    async (): Promise<PublishResultType> => {
-      const files = toFileInputs(draft.files);
-      const expiresAt = computeExpiresAt(expiryDays);
-
-      try {
-        if (isEditMode && slug) {
-          await replaceGistFiles(slug, files);
-          await updateGist(slug, { title, visibility, expiresAt });
-          await attachments.uploadQueued(slug);
-          attachments.clear();
-          clearPersistedDraft(persistenceKey);
-          navigate(`/g/${slug}`);
-        } else {
-          const created =
-            createdSlug.current ??
-            (
-              await createGist({
-                title: title || draft.files[0]?.filename || 'untitled',
-                visibility,
-                expiresAt,
-                files,
-              })
-            ).slug;
-          createdSlug.current = created;
-
-          await attachments.uploadQueued(created);
-          attachments.clear();
-          clearPersistedDraft(persistenceKey);
-          navigate(`/g/${created}`, { state: { justCreated: true } });
-        }
-        return { status: 'idle' };
-      } catch (error) {
-        return {
-          status: 'error',
-          message: error instanceof Error ? error.message : 'Could not publish this gist.',
-        };
-      }
-    },
-    { status: 'idle' },
-  );
+  const [publishResult, publishAction, isPublishing] = usePublish({
+    slug,
+    draft,
+    settings: { visibility, expiryDays },
+    attachments,
+    persistenceKey,
+  });
 
   const activeFile = draft.files[draft.activeIndex];
 

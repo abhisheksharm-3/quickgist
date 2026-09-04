@@ -55,10 +55,7 @@ export function RenderedFile({ file }: RenderedFilePropsType) {
               ref={setDocumentElement}
               className={isProse ? 'gist-prose reading-measure' : 'gist-prose min-w-0'}
             >
-              <div
-                // The API sanitised this with bluemonday before it left the server.
-                dangerouslySetInnerHTML={{ __html: file.html }}
-              />
+              <div dangerouslySetInnerHTML={{ __html: file.html }} />
             </div>
 
             <aside className="lg:sticky lg:top-[calc(var(--chrome-h)+2rem)] lg:self-start">

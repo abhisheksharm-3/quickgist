@@ -1,6 +1,6 @@
 /** The band listing files waiting to be uploaded with the gist. */
 import { X } from 'lucide-react';
-import { formatBytes } from '@/editor/attachments';
+import { formatBytes } from '@/lib/format-bytes';
 
 type AttachmentQueuePropsType = {
   queued: File[];

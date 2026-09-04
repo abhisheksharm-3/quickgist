@@ -17,15 +17,16 @@ const gutter =
  *
  * A `+` and `-` marker carries the same information as the colour, so the table
  * still reads correctly to anyone who cannot tell the two greens apart.
+ *
+ * Rows are keyed by kind and line numbers rather than by index: a kept line carries
+ * both numbers, an added one its new number, a removed one its old number, so the
+ * triple is unique across a diff even where the text repeats.
  */
 export function DiffTable({ lines }: DiffTablePropsType) {
   return (
     <div className="overflow-x-auto border border-[var(--border)] bg-[var(--panel)]">
       {lines.map((line) => (
         <div
-          // A kept line carries both numbers, an added one its new number, a removed
-          // one its old number, so the triple is unique across a diff even where the
-          // text repeats.
           key={`${line.kind}-${line.oldLine ?? 'x'}-${line.newLine ?? 'x'}`}
           data-diff={line.kind}
           className="diff-row flex items-start font-mono text-[11.5px] leading-[1.7]"

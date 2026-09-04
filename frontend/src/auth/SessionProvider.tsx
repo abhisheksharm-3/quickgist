@@ -71,15 +71,19 @@ export function SessionProvider({ children }: SessionProviderPropsType) {
     }
   }, []);
 
+  /**
+   * Creates an account, carrying the chosen handle and name in user metadata.
+   *
+   * handle_new_user() reads user_name and full_name from there, which is how a
+   * password account gets the handle the person actually chose instead of the local
+   * part of their email address.
+   */
   const signUpWithPassword = useCallback(
     async (email: string, password: string, profile: SignUpProfileType): Promise<void> => {
       if (!auth) {
         throw new Error('Authentication is not configured');
       }
 
-      // handle_new_user() reads user_name and full_name from this metadata, which is
-      // how a password account gets the handle the person actually chose instead of
-      // the local part of their email address.
       const { error } = await auth.signUp({
         email,
         password,
@@ -95,6 +99,13 @@ export function SessionProvider({ children }: SessionProviderPropsType) {
     [],
   );
 
+  /**
+   * Signs out locally, and clears this browser's state before asking.
+   *
+   * A local scope needs no server acceptance of the token. A global sign-out fails
+   * outright once the token has expired, which left the button doing nothing at
+   * exactly the moment it mattered.
+   */
   const signOut = useCallback(async (): Promise<void> => {
     setUser(null);
 
@@ -102,9 +113,6 @@ export function SessionProvider({ children }: SessionProviderPropsType) {
       return;
     }
 
-    // A local scope clears this browser's session without needing the server to
-    // accept the token. A global sign-out fails outright when the token has already
-    // expired, which left the button doing nothing at exactly the moment it mattered.
     await auth.signOut({ scope: 'local' });
   }, []);
 

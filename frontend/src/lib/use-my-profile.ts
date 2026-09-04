@@ -4,6 +4,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/auth/use-session';
 import { apiRequest } from '@/lib/api-client';
+import { profileQueryKeys } from '@/lib/query-keys';
 import { AuthorSchema } from '@/schemas';
 import type { AuthorType } from '@/types';
 
@@ -19,7 +20,7 @@ export function useMyProfile(): UseQueryResult<AuthorType, Error> {
   const { user } = useSession();
 
   return useQuery({
-    queryKey: ['me', user?.id],
+    queryKey: profileQueryKeys.me(user?.id),
     queryFn: () => apiRequest('/v1/me', AuthorSchema),
     enabled: Boolean(user),
     staleTime: 5 * 60 * 1000,

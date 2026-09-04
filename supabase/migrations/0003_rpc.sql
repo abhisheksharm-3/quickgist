@@ -197,6 +197,9 @@ begin
 end;
 $$;
 
+-- Superseded by 0008_revisions.sql, which redefines this function to snapshot the
+-- file set it is about to overwrite. Change it there; this definition never runs
+-- after 0008 has been applied.
 create or replace function replace_gist_files(p_slug text, p_files jsonb)
 returns jsonb
 language plpgsql

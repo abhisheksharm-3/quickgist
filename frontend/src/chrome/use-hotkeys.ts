@@ -48,3 +48,16 @@ function describeCombo(event: KeyboardEvent): string {
   parts.push(event.key.toLowerCase());
   return parts.join('+');
 }
+
+/**
+ * Bindings for switching to file n with the number keys.
+ *
+ * Built here rather than at each call site because the count and the off-by-one
+ * between a key and an index are the kind of detail worth stating once.
+ */
+export function digitSwitchBindings(onSwitch: (index: number) => void): HotkeyBindingType[] {
+  return Array.from({ length: 9 }, (_, index) => ({
+    combo: String(index + 1),
+    handler: () => onSwitch(index),
+  }));
+}

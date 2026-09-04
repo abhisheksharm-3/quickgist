@@ -27,6 +27,10 @@ type CodeEditorPropsType = {
  *
  * The grammar arrives through a dynamic import, so a Markdown gist never downloads
  * the Rust parser.
+ *
+ * The document seeds the view once, read from a ref so it stays out of the setup
+ * effect's dependencies: with the value itself in there, typing a character rebuilt
+ * the editor and lost the cursor.
  */
 export function CodeEditor({
   value,
@@ -44,8 +48,6 @@ export function CodeEditor({
   const description = useMemo(() => findLanguage(filename, language), [filename, language]);
   const [languageExtension, setLanguageExtension] = useState<Extension | null>(null);
 
-  // The document seeds the view once. Reading it from a ref keeps it out of the
-  // effect's dependencies, so typing a character does not rebuild the editor.
   const initialValueRef = useRef(value);
   initialValueRef.current = value;
 
