@@ -11,8 +11,10 @@ import (
 )
 
 const (
-	darkAttributeSelector = `[data-theme="dark"]`
-	systemDarkSelector    = `:root:not([data-theme="light"])`
+	darkAttributeSelector  = `[data-theme="dark"]`
+	systemDarkSelector     = `:root:not([data-theme="light"])`
+	lightAttributeSelector = `[data-theme="light"]`
+	systemLightSelector    = `:root:not([data-theme="dark"])`
 )
 
 // CSS returns the stylesheet for rendered code in both themes.
@@ -21,6 +23,12 @@ const (
 // explicit light choice, and the default of following the operating system. Emitting
 // only the [data-theme="dark"] rules would leave a system-dark reader who never
 // touched a toggle looking at dark-on-light code.
+//
+// Both palettes are scoped, neither is the unconditional default. The two chroma
+// styles do not define the same set of token classes, so an unscoped palette leaked
+// into the other theme wherever it defined a class the other omitted: one-light's
+// near-black Name colour was landing on Go identifiers in dark mode, which made
+// every unhighlighted token in a code block invisible.
 func (r *Renderer) CSS() (string, error) {
 	light, err := themeCSS(lightStyle)
 	if err != nil {
@@ -34,7 +42,12 @@ func (r *Renderer) CSS() (string, error) {
 
 	var b strings.Builder
 	fmt.Fprintf(&b, "/* quickgist highlight theme: %s */\n", r.hash)
-	b.WriteString(light)
+
+	b.WriteString("@media (prefers-color-scheme: light) {\n")
+	b.WriteString(scopeCSS(light, systemLightSelector))
+	b.WriteString("\n}\n")
+	b.WriteString(scopeCSS(light, lightAttributeSelector))
+
 	b.WriteString("\n@media (prefers-color-scheme: dark) {\n")
 	b.WriteString(scopeCSS(dark, systemDarkSelector))
 	b.WriteString("\n}\n")

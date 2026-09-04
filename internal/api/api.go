@@ -16,14 +16,15 @@ import (
 
 // API holds the handler dependencies.
 type API struct {
-	cfg      *config.Config
-	store    *store.Store
-	blobs    *blob.Store
-	renderer *render.Renderer
-	verifier *auth.Verifier
-	log      *slog.Logger
-	version  string
-	css      string
+	cfg            *config.Config
+	store          *store.Store
+	blobs          *blob.Store
+	renderer       *render.Renderer
+	verifier       *auth.Verifier
+	log            *slog.Logger
+	version        string
+	css            string
+	previewLimiter *limiter
 }
 
 // New builds the API.
@@ -45,14 +46,15 @@ func New(
 	}
 
 	return &API{
-		cfg:      cfg,
-		store:    st,
-		blobs:    blobs,
-		renderer: renderer,
-		verifier: verifier,
-		log:      log,
-		version:  version,
-		css:      css,
+		cfg:            cfg,
+		store:          st,
+		blobs:          blobs,
+		renderer:       renderer,
+		verifier:       verifier,
+		log:            log,
+		version:        version,
+		css:            css,
+		previewLimiter: newLimiter(previewRateLimitRPS, previewRateLimitBurst),
 	}, nil
 }
 

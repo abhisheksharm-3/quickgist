@@ -22,11 +22,11 @@ import (
 // extensions, the chroma options, or the sanitizer policy must bump it, because
 // Hash derives the render cache key from it and stale rows are detected by nothing
 // else.
-const rendererVersion = "r1"
+const rendererVersion = "r5"
 
 const (
-	lightStyle = "github"
-	darkStyle  = "github-dark"
+	lightStyle = oneLightStyleName
+	darkStyle  = "onedark"
 )
 
 // Renderer converts file content to HTML. Safe for concurrent use.
@@ -60,6 +60,10 @@ func New() *Renderer {
 // Raw HTML is enabled and then removed by the sanitizer. Disabling it here instead
 // would mangle legitimate Markdown containing a <kbd> or a <details>, rather than
 // stripping only what is dangerous.
+//
+// Hard wraps are off, which is how a .md file renders everywhere else. With them on,
+// a document whose author wrapped their paragraphs at 80 columns rendered with a
+// line break at every one of those columns.
 func newMarkdown() goldmark.Markdown {
 	return goldmark.New(
 		goldmark.WithExtensions(
@@ -73,13 +77,11 @@ func newMarkdown() goldmark.Markdown {
 					chromahtml.WithClasses(true),
 					chromahtml.WithLineNumbers(false),
 				),
+				highlighting.WithWrapperRenderer(wrapCodeBlock),
 			),
 		),
 		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
-		goldmark.WithRendererOptions(
-			goldmarkhtml.WithUnsafe(),
-			goldmarkhtml.WithHardWraps(),
-		),
+		goldmark.WithRendererOptions(goldmarkhtml.WithUnsafe()),
 	)
 }
 

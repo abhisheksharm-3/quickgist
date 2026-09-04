@@ -1,7 +1,9 @@
 // The HTML sanitizer policy applied to every rendered gist file.
 package render
 
-import "github.com/microcosm-cc/bluemonday"
+import (
+	"github.com/microcosm-cc/bluemonday"
+)
 
 // newPolicy builds the sanitizer for rendered gist content.
 //
@@ -22,6 +24,8 @@ func newPolicy() *bluemonday.Policy {
 	p.AllowAttrs("id").OnElements(
 		"h1", "h2", "h3", "h4", "h5", "h6", "span", "a", "li", "div",
 	)
+
+	p.AllowAttrs("data-language").Matching(languagePattern).OnElements("div")
 
 	p.AllowTables()
 	p.AllowAttrs("align").OnElements("td", "th")

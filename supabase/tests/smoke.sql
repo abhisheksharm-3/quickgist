@@ -7,6 +7,14 @@ begin;
 
 set local client_min_messages = notice;
 
+/*
+  The assertions below count rows, so they need a known starting point. Clearing the
+  tables inside the transaction gives one without touching real data, because the
+  rollback at the end puts everything back.
+*/
+delete from gists;
+delete from orphaned_blobs;
+
 do $$
 declare
     author_id  uuid := gen_random_uuid();

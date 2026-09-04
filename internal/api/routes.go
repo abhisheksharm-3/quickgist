@@ -19,6 +19,8 @@ func (a *API) Handler() (http.Handler, func()) {
 	a.registerRoutes(mux)
 
 	stop := make(chan struct{})
+	go a.previewLimiter.run(stop)
+
 	stack := a.middlewareStack(stop)
 
 	return gzhttp.GzipHandler(stack(mux)), func() { close(stop) }
@@ -29,6 +31,8 @@ func (a *API) registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/health", a.Health)
 	mux.HandleFunc("HEAD /v1/health", a.Health)
 	mux.HandleFunc("GET /v1/highlight.css", a.HighlightCSS)
+	mux.HandleFunc("GET /v1/me", a.Me)
+	mux.Handle("POST /v1/preview", a.rateLimit(a.previewLimiter)(http.HandlerFunc(a.Preview)))
 
 	mux.HandleFunc("GET /v1/gists/search", a.SearchGists)
 	mux.HandleFunc("GET /v1/gists", a.ListGists)
