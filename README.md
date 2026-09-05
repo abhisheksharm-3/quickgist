@@ -141,10 +141,9 @@ Crawlers do not run JavaScript, so a gist link pasted into a chat would preview 
 nothing. `preview.html` is the document they get instead, and `og.png` is the card it
 names, drawn per request from the gist's own title and files.
 
-The frontend's `vercel.json` routes crawler user agents to the first of those, and ships
-with `REPLACE-WITH-YOUR-API-HOST` in that rewrite. Until it names the deployed API, link
-previews resolve to nothing: a Render subdomain is global, so a guessed name is somebody
-else's service.
+The frontend's `vercel.json` routes crawler user agents to the first of those, at
+`https://quickgist.onrender.com`. A Render subdomain is global, so that name has to be the
+service's own: pointing it at a guess sends every link preview to a stranger.
 
 Every error has one shape:
 

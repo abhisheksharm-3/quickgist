@@ -60,7 +60,7 @@ shift $((OPTIND - 1))
 
 API="${QUICKGIST_API:-}"
 if [ -z "$API" ]; then
-	echo "quickgist: set QUICKGIST_API to your deployment, for example https://your-api.onrender.com" >&2
+	echo "quickgist: set QUICKGIST_API to your deployment, for example https://quickgist.onrender.com" >&2
 	exit 2
 fi
 
