@@ -81,11 +81,14 @@ type CreateGistInput struct {
 }
 
 // UpdateGistInput carries the metadata fields to change. A nil field is left as it is.
+// UpdateGistInput changes a gist's metadata. A nil field is left alone, and
+// ClearExpiry is the one thing nil cannot say.
 type UpdateGistInput struct {
 	Title       *string
 	Description *string
 	Visibility  *string
 	ExpiresAt   *time.Time
+	ClearExpiry bool
 }
 
 // RevisionSummary is one entry in a gist's history.

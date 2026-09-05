@@ -78,7 +78,7 @@ export function GistRoute() {
         ) : (
           <p className="text-sm text-[var(--body)]">
             That gist does not exist, or is not yours.{' '}
-            <Link to="/new" className="underline">
+            <Link to="/" className="underline">
               Start a new one
             </Link>
             .

@@ -73,8 +73,9 @@ export function AboutRoute() {
           Keyboard
         </h2>
         <p className={`${MEASURE} ${INSET} pb-5 text-[12.5px] leading-[1.7] text-[var(--dim)]`}>
-          Every binding uses a modifier, because the front door of this app is a text field and a
-          bare letter belongs to whatever you are typing.
+          The single-letter bindings do nothing while you are typing: the front door of this app is
+          a text field, so a bare letter belongs to whatever is in it and only reaches a shortcut
+          when no field has focus.
         </p>
         <ul className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
           {SHORTCUTS.map((row) => (

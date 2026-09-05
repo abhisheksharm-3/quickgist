@@ -10,7 +10,12 @@ import type { ThemeProviderPropsType, ThemeStateType, ThemeType } from '@/types/
  *
  * The initial value comes from storage during the first render rather than from an
  * effect, because an effect runs after paint and the page would flash the wrong
- * theme. index.html applies the same value before React loads at all.
+ * theme.
+ *
+ * The first paint still uses the dark palette on bare :root whatever is stored, since
+ * index.html carries no script: a reader who chose light sees one dark frame. Fixing
+ * that means an inline script in the document head, which is a trade of a blocking
+ * script against a single frame and has not been made.
  */
 export function ThemeProvider({ children }: ThemeProviderPropsType) {
   const [theme, setThemeState] = useState<ThemeType>(readStoredTheme);

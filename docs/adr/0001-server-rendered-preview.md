@@ -6,11 +6,14 @@ Markdown/syntax-highlighting library. A client renderer is a second implementati
 of the same contract, and the moment its extension set, its lexer version, or its
 sanitizer allowlist drifts from the server's, the preview a client-side author sees
 before saving stops matching the page every reader gets after saving — a preview
-that lies is worse than no preview. The r1-to-r2 bump is safe today because this is
-a pre-launch codebase with an empty `rendered_html` cache column: every row is
-already stale by definition, so nothing observable changes when the hash prefix
-changes. On a populated database the same bump is dangerous for the opposite
-reason — it invalidates every cached render at once, turning what should be an
-isolated theme change into a thundering-herd re-render of the entire corpus behind
-`cachedRenderIsCurrent`, at exactly the unauthenticated compute cost this ADR's
-preview benchmark measures.
+that lies is worse than no preview.
+
+The renderer version has moved several times since — it is `r5` in
+`internal/render/constants.go` — and each bump was safe for the same reason: a
+pre-launch corpus small enough that invalidating every cached render costs nothing
+anybody waits for. On a populated database a bump is the dangerous case, because it
+invalidates every cached render at once and turns an isolated palette change into a
+re-render of the whole corpus behind `cachedRenderIsCurrent`, at exactly the compute
+cost this ADR's preview benchmark measures. What makes it survivable is that the
+hash is checked per file: a gist is re-rendered when somebody opens it, not all at
+once by a migration.

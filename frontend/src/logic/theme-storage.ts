@@ -34,7 +34,8 @@ export function writeStoredTheme(theme: ThemeType): void {
  *
  * `system` removes the attribute rather than writing a value, which is what lets the
  * `prefers-color-scheme` rules in styles.css take over. Writing `data-theme="system"`
- * would match neither the light nor the dark selector and leave the page unstyled.
+ * would match neither theme's selector, and the page would silently stay on the dark
+ * palette that bare :root carries, whatever the operating system prefers.
  */
 export function applyTheme(theme: ThemeType): void {
   const root = document.documentElement;

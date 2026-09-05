@@ -160,6 +160,7 @@ $$;
 
 -- Update metadata only. Editing file bodies goes through replace_gist_files, so the
 -- render-invalidation trigger has a single path to fire on.
+-- Superseded by 0011, which added the flag that clears an expiry. Change it there.
 create or replace function update_gist(
     p_slug        text,
     p_title       text default null,
@@ -262,6 +263,7 @@ end;
 $$;
 
 -- Keyset pagination, not offset: page 500 of a feed costs the same as page 1.
+-- Superseded by 0006, 0009 and finally 0011. Change it there.
 create or replace function list_gists(
     p_handle text default null,
     p_limit  int default 30,
@@ -287,6 +289,7 @@ as $$
     limit least(greatest(p_limit, 1), 100);
 $$;
 
+-- Superseded by 0006, 0010 and finally 0011. Change it there.
 create or replace function search_gists(
     p_query text,
     p_limit int default 30

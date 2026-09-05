@@ -9,6 +9,7 @@
 -- public, so it needs nothing exposed that was not exposed before, and (created_at,
 -- slug) makes both the ordering and the comparison total.
 
+-- Superseded by 0011, which branches so a partial index can be used. Change it there.
 create or replace function list_gists(
     p_handle      text default null,
     p_limit       int default 30,

@@ -83,12 +83,17 @@ func (a *API) UpdateGist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gist, err := a.store.UpdateGist(r.Context(), id, r.PathValue("slug"), domain.UpdateGistInput{
+	update := domain.UpdateGistInput{
 		Title:       req.Title,
 		Description: req.Description,
 		Visibility:  req.Visibility,
-		ExpiresAt:   req.ExpiresAt,
-	})
+	}
+	if req.ExpiresAt != nil {
+		update.ExpiresAt = *req.ExpiresAt
+		update.ClearExpiry = *req.ExpiresAt == nil
+	}
+
+	gist, err := a.store.UpdateGist(r.Context(), id, r.PathValue("slug"), update)
 	if err != nil {
 		a.failFromStore(w, r, err)
 		return

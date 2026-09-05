@@ -25,7 +25,10 @@ declare
     page        jsonb;
     cursor_ts   timestamptz;
     cursor_slug text;
-    total       int;
+    total          int;
+    unlisted_slug  text;
+    exp_slug       text;
+    second_author  uuid;
     payload    jsonb;
     handle     text;
     n          int;
@@ -351,6 +354,119 @@ begin
     -- search of a large corpus a download.
     assert not ((search_gists('page') -> 0 -> 'files' -> 0) ? 'content'),
         'search returned file contents';
+
+    -- ---- unlisted, which the whole visibility design rests on ----------------
+    -- It was the one mode nothing asserted: reachable by slug, absent from every
+    -- listing, invisible to search.
+    perform set_config('request.jwt.claims',
+        json_build_object('sub', author_id::text)::text, true);
+
+    payload := create_gist(
+        p_title      => 'Unlisted note',
+        p_visibility => 'unlisted',
+        p_files      => '[{"filename":"u.md","content":"secret-ish"}]'::jsonb
+    );
+    unlisted_slug := payload ->> 'slug';
+
+    perform set_config('request.jwt.claims', null, true);
+
+    assert get_gist(unlisted_slug) is not null,
+        'an unlisted gist was not readable by slug';
+    assert not exists (
+        select 1 from jsonb_array_elements(list_gists(null, 100, null, null)) g
+        where g ->> 'slug' = unlisted_slug
+    ), 'an unlisted gist appeared in the public feed';
+    assert jsonb_array_length(search_gists('unlisted note')) = 0,
+        'an unlisted gist was searchable';
+    assert not exists (
+        select 1 from jsonb_array_elements(list_gists('smoketester', 100, null, null)) g
+        where g ->> 'slug' = unlisted_slug
+    ), 'an unlisted gist appeared on its author''s public page to a stranger';
+
+    -- ---- reading for a machine does not count as a view ----------------------
+    n := (get_gist_meta(unlisted_slug) ->> 'view_count')::int;
+    perform get_gist_meta(unlisted_slug);
+    perform get_gist_meta(unlisted_slug);
+    assert (get_gist_meta(unlisted_slug) ->> 'view_count')::int = n,
+        'get_gist_meta counted a view';
+
+    -- ---- an expired gist leaves every listing, not just get_gist -------------
+    perform set_config('request.jwt.claims',
+        json_build_object('sub', author_id::text)::text, true);
+    payload := create_gist(
+        p_title      => 'Expiring soon',
+        p_visibility => 'public',
+        p_files      => '[{"filename":"e.md","content":"gone"}]'::jsonb
+    );
+    exp_slug := payload ->> 'slug';
+    update gists set created_at = now() - interval '2 days',
+                     expires_at = now() - interval '1 day'
+     where slug = exp_slug;
+
+    assert get_gist(exp_slug) is null, 'an expired gist was readable';
+    assert get_gist_meta(exp_slug) is null, 'an expired gist was readable without a view';
+    assert not exists (
+        select 1 from jsonb_array_elements(list_gists(null, 100, null, null)) g
+        where g ->> 'slug' = exp_slug
+    ), 'an expired gist stayed in the feed';
+    assert jsonb_array_length(search_gists('expiring')) = 0,
+        'an expired gist stayed searchable';
+
+    -- ---- an expiry can be removed once set ----------------------------------
+    perform update_gist(p_slug => rev_slug, p_expires_at => now() + interval '5 days');
+    assert (select expires_at is not null from gists where slug = rev_slug),
+        'an expiry was not set';
+    perform update_gist(p_slug => rev_slug, p_clear_expiry => true);
+    assert (select expires_at is null from gists where slug = rev_slug),
+        'an expiry could not be cleared';
+
+    -- ---- restoring puts back the title, not only the files -------------------
+    perform update_gist(p_slug => rev_slug, p_title => 'Renamed since');
+    perform restore_revision(rev_slug, 1);
+    assert (select title from gists where slug = rev_slug) = 'Versioned',
+        'restore left the gist under a title from a different version';
+
+    -- ---- the bounds, at their edges -----------------------------------------
+    begin
+        perform create_gist(
+            p_title      => 'Too many',
+            p_visibility => 'public',
+            p_files      => (
+                select jsonb_agg(jsonb_build_object('filename', 'f' || i || '.md', 'content', 'x'))
+                from generate_series(1, 21) i
+            )
+        );
+        assert false, 'a gist was allowed twenty-one files';
+    exception when check_violation then null;
+    end;
+
+    assert jsonb_array_length(list_gists(null, 0, null, null)) <= 1,
+        'a zero limit was not clamped to one row';
+    assert jsonb_array_length(list_gists(null, 1000, null, null)) <= 100,
+        'a thousand-row request was not clamped to a hundred';
+
+    -- ---- the handle trigger's harder branches -------------------------------
+    second_author := gen_random_uuid();
+    insert into auth.users (id, email, raw_user_meta_data)
+    values (second_author, 'smoke2@example.com', '{"user_name":"Smoke.Tester"}'::jsonb);
+    select p.handle into handle from profiles p where p.id = second_author;
+    assert handle = 'smoketester-1',
+        format('a duplicate handle was not de-duplicated, got %L', handle);
+
+    -- ---- authorization, in the direction the suite did not cover -------------
+    perform set_config('request.jwt.claims', null, true);
+    begin
+        perform replace_gist_files(rev_slug, '[{"filename":"a.md","content":"nope"}]'::jsonb);
+        assert false, 'an anonymous caller replaced a gist''s files';
+    exception when insufficient_privilege then null;
+    end;
+
+    perform set_config('request.jwt.claims',
+        json_build_object('sub', second_author::text)::text, true);
+    assert replace_gist_files(rev_slug, '[{"filename":"a.md","content":"nope"}]'::jsonb) is null,
+        'another user replaced the files of a gist they do not own';
+    assert restore_revision(rev_slug, 1) is null,
+        'another user restored a revision of a gist they do not own';
 
     raise notice 'ALL ASSERTIONS PASSED';
 end;

@@ -2,8 +2,8 @@
 #
 # Create it from the dashboard with New > Blueprint, pointed at this repository.
 # Values marked sync:false are not stored here and are asked for once, on first
-# deploy: the two of them are the database password and the storage key, and neither
-# belongs in git.
+# deploy: the database URL, the storage key, this service's own URL, and the Sentry
+# DSN. None of them belongs in git, and the third cannot be guessed.
 services:
   - type: web
     name: quickgist-api
@@ -35,8 +35,9 @@ services:
       - key: SUPABASE_STORAGE_BUCKET
         value: gist-files
 
-      # The browser origin. The default allows localhost only, so sign-in fails
-      # against a deployed frontend until this names it.
+      # The browser origin. The default allows localhost only, so every API call
+      # from a deployed frontend is blocked until this names it. Signing in still
+      # works either way: the browser talks to Supabase directly, not through here.
       - key: CORS_ALLOWED_ORIGINS
         value: https://quickgist.vercel.app
 

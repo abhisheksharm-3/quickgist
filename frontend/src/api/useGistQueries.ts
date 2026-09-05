@@ -58,10 +58,12 @@ export function useGistList(query: ListGistsQueryType = {}): UseQueryResult<Gist
 /**
  * The feed, one page at a time.
  *
- * Pages are keyset-based: the cursor is the created_at of the last gist on the page
- * before, which the API takes as `before`. Offsets were the alternative and get
- * slower the further you read, as well as skipping or repeating a row whenever
- * something is published while somebody is paging.
+ * Pages are keyset-based, and the cursor is a pair: the created_at and the slug of
+ * the last gist on the page before, sent as `before` and `beforeSlug`. The timestamp
+ * alone is not unique, and comparing on it alone dropped every gist that shared a
+ * timestamp with that last row. Offsets were the other option and get slower the
+ * further you read, as well as skipping or repeating a row whenever something is
+ * published while somebody is paging.
  *
  * A page shorter than FEED_PAGE_SIZE is the last one, which saves the request that would
  * otherwise be needed to discover the end.

@@ -41,11 +41,16 @@ type createGistRequest struct {
 }
 
 // updateGistRequest carries the metadata to change. An omitted field is left alone.
+//
+// ExpiresAt is a pointer to a pointer so the three cases stay distinct: absent
+// leaves the expiry as it is, a timestamp sets it, and an explicit null removes it.
+// With one level of indirection the last two are the same value, and a gist set to
+// expire could never be set back to never.
 type updateGistRequest struct {
-	Title       *string    `json:"title"`
-	Description *string    `json:"description"`
-	Visibility  *string    `json:"visibility"`
-	ExpiresAt   *time.Time `json:"expiresAt"`
+	Title       *string     `json:"title"`
+	Description *string     `json:"description"`
+	Visibility  *string     `json:"visibility"`
+	ExpiresAt   **time.Time `json:"expiresAt"`
 }
 
 // fileInput is a text file as a client sends it, on create and on replace alike.

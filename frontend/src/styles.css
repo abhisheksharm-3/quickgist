@@ -7,10 +7,13 @@
 }
 
 /*
-  The visual system. Tokens are declared for light on bare :root so a colour is
-  never defined only inside a media query, then overridden for the two dark
-  conditions. Rendered gist HTML comes from the server and cannot carry utility
-  classes, so .gist-prose styles it by element.
+  The visual system. Every colour is declared on bare :root, which carries the dark
+  palette because dark is this product's default surface, and the light palette
+  overrides it for the two light conditions. Declaring the full set unconditionally
+  is what stops a colour from existing only inside a media query.
+
+  Rendered gist HTML comes from the server and cannot carry utility classes, so
+  .gist-prose styles it by element.
 */
 @layer base {
   :root {

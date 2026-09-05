@@ -39,6 +39,7 @@ as $$
 $$;
 
 -- Search public gists, returning summaries rather than whole documents.
+-- Superseded by 0011, which made the tiebreak total. Change it there.
 create or replace function search_gists(
     p_query text,
     p_limit int default 30

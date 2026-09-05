@@ -14,8 +14,9 @@ import (
 // UploadFile handles POST /v1/gists/{slug}/files.
 //
 // Uploads are a separate endpoint so a text gist never touches multipart parsing.
-// Retention comes from the optional retentionDays field, capped at 30 days by the
-// database whatever a caller asks for.
+// Retention comes from the optional retentionDays field and is refused here if it is
+// outside 1 to 30, so a caller asking for 60 gets a 422 rather than a silent 30. The
+// database's own ceiling is what makes the limit true regardless.
 func (a *API) UploadFile(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requireIdentity(w, r)
 	if !ok {

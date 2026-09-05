@@ -30,7 +30,8 @@ const (
 	systemLightSelector    = `:root:not([data-theme="dark"])`
 )
 
-// oneLightStyleName is the style registered below and used as lightStyle.
+// oneLightStyleName is the style used as lightStyle. style.go registers it in init,
+// because chroma ships no light theme matching this product's palette.
 const oneLightStyleName = "one-light"
 
 // languagePattern is what may reach the data-language attribute. The fence info

@@ -12,10 +12,10 @@ import (
 	"time"
 )
 
-// slugPattern is what generate_slug() produces: twelve characters from a 32-symbol
-// alphabet. A cursor's slug is checked against it rather than passed through, so a
-// crafted value reaches the query as a rejected request instead of a comparison.
-var slugPattern = regexp.MustCompile(`^[a-z0-9]{4,32}$`)
+// slugPattern is exactly what generate_slug() produces: twelve characters from a
+// 32-symbol alphabet. A cursor's slug is matched against it rather than passed
+// through, so a crafted value is a rejected request instead of a comparison.
+var slugPattern = regexp.MustCompile(`^[a-z0-9]{12}$`)
 
 const (
 	maxJSONBody     = 2 << 20

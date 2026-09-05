@@ -1,4 +1,5 @@
-// Response and error writing, and the single error shape the whole API returns.
+// Response and error writing. The shape itself is errorBody in types.go and the codes
+// are in constants.go; this is what fills them in.
 package api
 
 import (
@@ -98,8 +99,8 @@ func (a *API) failFromStore(w http.ResponseWriter, r *http.Request, err error) {
 
 // clientMessage picks the text a client sees.
 //
-// A validation failure carries the database's own reason, which is written for
-// humans and safe to show. Everything else falls back to the status text, so no
+// An invalid request carries the reason its cause gives, which is written for humans
+// and safe to show. Everything without a cause falls back to the status text, so no
 // internal detail escapes.
 func clientMessage(status int, code string, cause error) string {
 	if code == codeInvalidRequest && cause != nil && errors.Is(cause, store.ErrInvalid) {

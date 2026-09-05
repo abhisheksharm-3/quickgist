@@ -48,6 +48,7 @@ $$;
 
 comment on function gist_summary(gists) is 'A feed row: no file content, no cached HTML.';
 
+-- Superseded by 0009 and then 0011. Change it there.
 create or replace function list_gists(
     p_handle text default null,
     p_limit  int default 30,
@@ -77,6 +78,7 @@ as $$
     from visible v;
 $$;
 
+-- Superseded by 0010 and then 0011. Change it there.
 create or replace function search_gists(
     p_query text,
     p_limit int default 30

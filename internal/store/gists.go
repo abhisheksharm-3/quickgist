@@ -57,8 +57,8 @@ func (s *Store) CreateGist(ctx context.Context, id *auth.Identity, in domain.Cre
 func (s *Store) UpdateGist(ctx context.Context, id *auth.Identity, slug string, in domain.UpdateGistInput) (*domain.Gist, error) {
 	var g domain.Gist
 	err := s.queryJSON(ctx, id, &g,
-		"select update_gist($1, $2, $3, $4, $5)",
-		slug, in.Title, in.Description, in.Visibility, in.ExpiresAt)
+		"select update_gist($1, $2, $3, $4, $5, $6)",
+		slug, in.Title, in.Description, in.Visibility, in.ExpiresAt, in.ClearExpiry)
 	if err != nil {
 		return nil, err
 	}

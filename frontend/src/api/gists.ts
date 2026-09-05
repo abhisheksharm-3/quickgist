@@ -60,8 +60,9 @@ export function restoreRevision(slug: string, revision: number): Promise<GistTyp
 /**
  * Uploads one file to an existing gist.
  *
- * retentionDays is capped at 30 by the database whatever is sent, and omitting it
- * takes the 30-day default.
+ * retentionDays must be between 1 and 30: the API answers 422 for anything else
+ * rather than clamping it, and the database's own constraint is what makes the
+ * ceiling true. Omitting it takes the 30-day default.
  */
 export function uploadGistFile({
   slug,

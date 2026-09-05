@@ -57,6 +57,7 @@ as $$
 $$;
 
 -- Take a snapshot of a gist as it stands, returning the revision number used.
+-- Superseded by 0011, which locks the gist row and caps the history. Change it there.
 create or replace function snapshot_gist(p_gist gists)
 returns integer
 language plpgsql
@@ -211,6 +212,7 @@ $$;
 
 -- Put a revision back. The current state is snapshotted first by
 -- replace_gist_files, so restoring is itself undoable.
+-- Superseded by 0011, which also puts the title back. Change it there.
 create or replace function restore_revision(p_slug text, p_revision integer)
 returns jsonb
 language plpgsql

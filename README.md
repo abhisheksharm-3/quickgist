@@ -2,9 +2,10 @@
 
 Share Markdown and code fast. Paste, get a link, send it. No account needed.
 
-Markdown and source are rendered on the server, so the browser downloads no syntax
+Markdown and source are rendered on the server, so reading a gist downloads no syntax
 highlighter: `goldmark` for CommonMark and GFM, `chroma` for around 250 languages,
-`bluemonday` to sanitize the result. Rendered HTML is cached in Postgres and keyed to
+`bluemonday` to sanitize the result. Writing one is the exception, where the editor
+lazily loads CodeMirror and a grammar per file. Rendered HTML is cached in Postgres and keyed to
 a renderer version, so a deploy that changes rendering invalidates every cached row
 without a migration.
 
@@ -28,11 +29,21 @@ and write each gist, and the API calls SQL functions inside a transaction carryi
 the caller's verified JWT claims, so `auth.uid()` and every policy apply to it too. A
 handler that forgot a check still could not read someone else's private gist.
 
-- `supabase/migrations/0001_init.sql` — tables, constraints, triggers
-- `supabase/migrations/0002_rls.sql` — row-level security policies
-- `supabase/migrations/0003_rpc.sql` — the SQL functions the API calls
-- `supabase/migrations/0004_maintenance.sql` — scheduled cleanup, storage bucket
-- `supabase/tests/smoke.sql` — 40 assertions covering the above
+- `0001_init.sql` — tables, constraints, triggers
+- `0002_rls.sql` — row-level security policies
+- `0003_rpc.sql` — the SQL functions the API calls
+- `0004_maintenance.sql` — scheduled cleanup, storage bucket
+- `0005_my_profile.sql` — the caller's own profile
+- `0006_list_performance.sql` — summaries, and a limit that limits rows
+- `0007_gist_meta.sql` — a read that does not count as a view
+- `0008_revisions.sql` — history, taken by the save that would overwrite it
+- `0009_list_keyset.sql` — a cursor that cannot skip a row
+- `0010_search_prefix.sql` — search that matches what has been typed so far
+- `0011_hardening.sql` — grants, indexes and the fixes an audit found
+- `supabase/tests/smoke.sql` — the behavioural suite, run against a live database
+
+A function redefined by a later migration is dead in the earlier one; the earlier
+definition says so where that has happened.
 
 Three visibilities. `public` gists are listed and searchable. `unlisted` ones are
 reachable only by their 12-character slug, which is 60 bits of entropy, and are
@@ -65,8 +76,10 @@ npm install
 npm run dev                          # app on :5173, proxying /v1 to :8000
 ```
 
-`DATABASE_URL` must be the pooler connection string. The direct `db.<ref>.supabase.co`
-host publishes an AAAA record only, so it is unreachable from an IPv4-only network.
+`DATABASE_URL` must be the pooler connection string in **session** mode, on port 5432.
+Transaction mode (6543) breaks pgx, which prepares statements, and the direct
+`db.<ref>.supabase.co` host publishes an AAAA record only, so it is unreachable from an
+IPv4-only network.
 
 ## Checks
 
@@ -118,15 +131,20 @@ cat notes.md | scripts/quickgist        # from a pipe, as paste.md
 scripts/quickgist -v public -e 7 bug.go # public, deleted after a week
 ```
 
-`QUICKGIST_API` points it at a different deployment and `QUICKGIST_TOKEN` signs the
-gist as you, which is only needed for `private`.
+`QUICKGIST_API` is required and names your own deployment: the script exits rather than
+guessing, because a wrong default would post the file you are sharing to somebody else's
+server. `QUICKGIST_TOKEN` signs the gist as you, which is only needed for `private`.
 
 ### Link previews
 
 Crawlers do not run JavaScript, so a gist link pasted into a chat would preview as
 nothing. `preview.html` is the document they get instead, and `og.png` is the card it
-names, drawn per request from the gist's own title and files. The frontend's
-`vercel.json` routes crawler user agents to the first of those.
+names, drawn per request from the gist's own title and files.
+
+The frontend's `vercel.json` routes crawler user agents to the first of those, and ships
+with `REPLACE-WITH-YOUR-API-HOST` in that rewrite. Until it names the deployed API, link
+previews resolve to nothing: a Render subdomain is global, so a guessed name is somebody
+else's service.
 
 Every error has one shape:
 

@@ -2,7 +2,7 @@
 import type { KeyboardMapEntryType } from '@/types/command';
 
 export const KEYBOARD_MAP: KeyboardMapEntryType[] = [
-  { keys: '⌘K', action: 'Command palette', where: 'everywhere' },
+  { keys: '⌘K', action: 'Command palette', where: 'wherever the palette is mounted' },
   { keys: '⌘C', action: 'Copy the link', where: 'gist, while the band is up' },
   { keys: 'N', action: 'New gist', where: 'gist, explore' },
   { keys: 'E', action: 'Edit', where: 'gist, if you are the author' },
