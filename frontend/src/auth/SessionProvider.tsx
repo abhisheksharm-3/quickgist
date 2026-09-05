@@ -1,14 +1,10 @@
 /** Provides the Supabase session to the tree and keeps it current. */
 
-import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SessionContext } from '@/auth/session-context';
+import type { SessionProviderPropsType } from '@/auth/types';
 import { auth } from '@/lib/supabase-client';
 import type { SessionStateType, SessionUserType, SignUpProfileType } from '@/types';
-
-type SessionProviderPropsType = {
-  children: ReactNode;
-};
 
 /**
  * Tracks the signed-in user.

@@ -1,20 +1,7 @@
 /** The shared shape for every nothing-here screen. */
 
-import type { ReactNode } from 'react';
 import { Link } from 'react-router';
-
-export type EmptyStateActionType = {
-  label: string;
-  to: string;
-  primary?: boolean;
-};
-
-type EmptyStatePropsType = {
-  code: string;
-  title: string;
-  children: ReactNode;
-  actions?: EmptyStateActionType[] | undefined;
-};
+import type { EmptyStatePropsType } from '@/chrome/types';
 
 /**
  * A nothing-here screen.

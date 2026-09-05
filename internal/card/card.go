@@ -19,40 +19,6 @@ import (
 //go:embed fonts/IBMPlexSans-SemiBold.ttf
 var fonts embed.FS
 
-// The card is the size every chat client and crawler expects, and the palette is
-// the application's dark theme so a preview looks like the page it opens.
-const (
-	width  = 1200
-	height = 630
-
-	margin   = 72
-	gridStep = 26
-
-	titleSize = 62
-	metaSize  = 26
-	markSize  = 34
-
-	maxTitleLines = 3
-	maxFileChips  = 4
-)
-
-var (
-	background = color.RGBA{0x0d, 0x0f, 0x13, 0xff}
-	gridLine   = color.RGBA{0x1a, 0x1d, 0x24, 0xff}
-	heading    = color.RGBA{0xec, 0xee, 0xf2, 0xff}
-	dim        = color.RGBA{0x8b, 0x90, 0x9a, 0xff}
-	accent     = color.RGBA{0x3b, 0x82, 0xf6, 0xff}
-)
-
-// Data is what a card says.
-type Data struct {
-	Title      string
-	Author     string
-	Files      []string
-	Visibility string
-	FileCount  int
-}
-
 // Renderer draws cards. Safe for concurrent use: the faces it holds are read-only
 // after New, and each Render draws onto its own image.
 type Renderer struct {

@@ -7,17 +7,16 @@
  * `apiRequest` helper rather than carrying a session token nobody checks.
  */
 import { useEffect, useState } from 'react';
+import { DEFAULT_DEBOUNCE_MS, DEFAULT_RETRY_AFTER_SECONDS } from '@/editor/constants';
 import type {
   DraftFileType,
+  PreviewRequestType,
   PreviewResponseType,
   PreviewStatusType,
   UsePreviewResultType,
 } from '@/editor/types';
 import { PreviewResponseSchema } from '@/editor/types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
-const DEFAULT_DEBOUNCE_MS = 400;
-const DEFAULT_RETRY_AFTER_SECONDS = 60;
+import { API_BASE_URL } from '@/lib/env';
 
 class PreviewRateLimitedError extends Error {
   readonly retryAfterSeconds: number;
@@ -79,12 +78,6 @@ export function usePreview(
 
   return { html, status, isStale, retryAfterSeconds };
 }
-
-type PreviewRequestType = {
-  filename: string;
-  language: string | null;
-  content: string;
-};
 
 async function requestPreview(
   input: PreviewRequestType,

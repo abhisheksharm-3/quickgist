@@ -1,14 +1,6 @@
 /** Wires the app's single-letter and modifier keyboard map to a document listener. */
 import { useEffect, useEffectEvent } from 'react';
-
-export type GlobalShortcutHandlersType = {
-  onOpenPalette: () => void;
-  onOpenShortcuts: () => void;
-  onNew?: (() => void) | undefined;
-  onEdit?: (() => void) | undefined;
-  onFocusSearch?: (() => void) | undefined;
-  onSwitchFile?: ((index: number) => void) | undefined;
-};
+import type { GlobalShortcutHandlersType } from '@/command/types';
 
 /**
  * Suppresses every single-letter binding while a text field has focus, so typing

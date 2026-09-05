@@ -1,5 +1,6 @@
 /** Classifying a file chosen from disk into something a gist can hold. */
 
+import { MAX_TEXT_BYTES, MAX_UPLOAD_BYTES } from '@/editor/constants';
 /**
  * The two size ceilings the API enforces, repeated here so a file that cannot be
  * accepted is refused before it is sent rather than after.
@@ -7,13 +8,7 @@
  * A text file is stored in Postgres and capped at 1 MiB; anything else goes to the
  * bucket, which stops at 10 MiB.
  */
-export const MAX_TEXT_BYTES = 1 << 20;
-const MAX_UPLOAD_BYTES = 10 << 20;
-
-export type AttachmentType =
-  | { kind: 'text'; filename: string; content: string }
-  | { kind: 'binary'; filename: string; file: File }
-  | { kind: 'rejected'; filename: string; reason: string };
+import type { AttachmentType } from '@/editor/types';
 
 /**
  * Reads one file and decides what it is.

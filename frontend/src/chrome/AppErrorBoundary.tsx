@@ -1,11 +1,7 @@
 /** The last line of defence for a render that throws. */
 import * as Sentry from '@sentry/react';
-import type { ReactNode } from 'react';
 import { EmptyState } from '@/chrome/EmptyState';
-
-type AppErrorBoundaryPropsType = {
-  children: ReactNode;
-};
+import type { AppErrorBoundaryPropsType } from '@/chrome/types';
 
 /**
  * Catches a render error anywhere in the tree.

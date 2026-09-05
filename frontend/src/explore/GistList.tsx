@@ -1,14 +1,8 @@
 /** A list of gist summaries, with a caller-chosen empty state. */
-import type { ReactNode } from 'react';
+
 import { Link } from 'react-router';
-import type { GistType } from '@/types';
-
-type GistListPropsType = {
-  gists: GistType[];
-  empty: ReactNode;
-};
-
-const dayMonth = new Intl.DateTimeFormat(undefined, { day: '2-digit', month: 'short' });
+import type { GistListPropsType, GistSummaryPropsType } from '@/explore/types';
+import { formatDayMonth } from '@/lib/format-date';
 
 /**
  * The feed.
@@ -33,10 +27,6 @@ export function GistList({ gists, empty }: GistListPropsType) {
     </ul>
   );
 }
-
-type GistSummaryPropsType = {
-  gist: GistType;
-};
 
 /**
  * One row.
@@ -75,7 +65,7 @@ function GistSummary({ gist }: GistSummaryPropsType) {
       </div>
 
       <div className="flex-none text-right font-mono text-[10.5px] text-[var(--faint)]">
-        <p className="text-[var(--dim)]">{dayMonth.format(new Date(gist.createdAt))}</p>
+        <p className="text-[var(--dim)]">{formatDayMonth(gist.createdAt)}</p>
         <p className="mt-1">
           {gist.viewCount} {gist.viewCount === 1 ? 'view' : 'views'}
         </p>

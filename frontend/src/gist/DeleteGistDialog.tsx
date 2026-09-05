@@ -1,15 +1,6 @@
 /** The confirmation a gist has to pass before it is deleted. */
 import { useEffect, useRef } from 'react';
-
-type DeleteGistDialogPropsType = {
-  title: string;
-  fileCount: number;
-  isOpen: boolean;
-  isDeleting: boolean;
-  error: string | null;
-  onConfirm: () => void;
-  onCancel: () => void;
-};
+import type { DeleteGistDialogPropsType } from '@/gist/types';
 
 /**
  * The delete confirmation.

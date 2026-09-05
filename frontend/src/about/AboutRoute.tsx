@@ -1,11 +1,10 @@
 /** The landing page: what quickgist is, what it renders, and what it is made of. */
+
+import { INSET, MEASURE } from '@/about/constants';
+import { SHORTCUTS, STACK } from '@/about/content';
 import { LandingDemo } from '@/about/LandingDemo';
 import { LandingFeatures } from '@/about/LandingFeatures';
 import { LandingHero } from '@/about/LandingHero';
-import { SHORTCUTS, STACK } from '@/about/stack';
-
-const INSET = 'px-5 sm:px-8';
-const MEASURE = 'max-w-[68ch]';
 
 /**
  * The landing page.

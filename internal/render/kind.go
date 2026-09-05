@@ -19,14 +19,6 @@ const (
 	KindBinary   Kind = "binary"
 )
 
-var markdownExtensions = map[string]struct{}{
-	".md":       {},
-	".markdown": {},
-	".mdown":    {},
-	".mkd":      {},
-	".mdx":      {},
-}
-
 // KindOf classifies a file from its metadata alone, for listings that carry no
 // content. It agrees with Render for the same filename and language.
 func KindOf(filename, language string) Kind {

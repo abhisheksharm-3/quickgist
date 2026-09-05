@@ -1,7 +1,7 @@
 /** Reading and applying the stored theme choice. */
-import type { ThemeType } from '@/theme/types';
 
-export const THEME_STORAGE_KEY = 'quickgist-theme';
+import { THEME_STORAGE_KEY } from '@/theme/constants';
+import type { ThemeType } from '@/theme/types';
 
 /**
  * Reads the stored choice, defaulting to `system`.

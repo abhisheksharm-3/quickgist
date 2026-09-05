@@ -4,18 +4,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { createDraftFromGist } from '@/editor/editor-reducer';
 import { savePersistedDraft } from '@/editor/use-draft-persistence';
-import type { GistType } from '@/types';
-
-type GistMetaPropsType = {
-  gist: GistType;
-  rawUrl: string | undefined;
-  editUrl: string | undefined;
-  revisionCount: number;
-  onDelete: (() => void) | undefined;
-};
-
-const action =
-  'flex items-center gap-1.5 border border-[var(--border-strong)] bg-[var(--panel-2)] px-2.5 py-1 text-[11.5px] text-[var(--dim)] transition-colors hover:border-[var(--dim)] hover:text-[var(--heading)]';
+import { action } from '@/gist/constants';
+import type { GistMetaPropsType } from '@/gist/types';
 
 /**
  * The gist header.

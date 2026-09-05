@@ -2,21 +2,9 @@
 
 import { X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import type { FileTabsPropsType, FileTabType, TabRenameFieldPropsType } from '@/chrome/types';
 import { cn } from '@/lib/cn';
-
-export type FileTabType = {
-  id: string;
-  label: string;
-};
-
-type FileTabsPropsType = {
-  files: FileTabType[];
-  activeId: string;
-  onActivate: (id: string) => void;
-  onRename?: ((id: string, label: string) => void) | undefined;
-  onClose?: ((id: string) => void) | undefined;
-  onAdd?: (() => void) | undefined;
-};
+import { panelId, tabId } from '@/lib/tab-ids';
 
 /**
  * The tab strip.
@@ -171,12 +159,6 @@ export function FileTabs({
   );
 }
 
-type TabRenameFieldPropsType = {
-  initialValue: string;
-  onCommit: (value: string) => void;
-  onCancel: () => void;
-};
-
 /**
  * The inline rename field.
  *
@@ -217,12 +199,4 @@ function TabRenameField({ initialValue, onCommit, onCancel }: TabRenameFieldProp
       className="w-40 shrink-0 border-r border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 font-mono text-[11.5px] text-[var(--heading)] outline-none ring-1 ring-inset ring-[var(--blue-action)]"
     />
   );
-}
-
-export function tabId(id: string): string {
-  return `tab-${id}`;
-}
-
-export function panelId(id: string): string {
-  return `panel-${id}`;
 }

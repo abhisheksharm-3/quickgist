@@ -1,14 +1,7 @@
 /** A summary band above your gist list. */
-import type { GistType } from '@/types';
 
-type MeStatsPropsType = {
-  gists: GistType[];
-};
-
-type StatType = {
-  label: string;
-  value: string;
-};
+import { buildGistStats } from '@/explore/gist-stats';
+import type { MeStatsPropsType } from '@/explore/types';
 
 /**
  * Counts across your gists.
@@ -25,13 +18,7 @@ export function MeStats({ gists }: MeStatsPropsType) {
     return null;
   }
 
-  const stats: StatType[] = [
-    { label: 'Gists', value: String(gists.length) },
-    { label: 'Files', value: String(sum(gists, (gist) => gist.files.length)) },
-    { label: 'Views', value: String(sum(gists, (gist) => gist.viewCount)) },
-    { label: 'Public', value: String(count(gists, 'public')) },
-    { label: 'Private', value: String(count(gists, 'private')) },
-  ];
+  const stats = buildGistStats(gists);
 
   return (
     <dl className="grid grid-cols-2 border-b border-[var(--border)] sm:grid-cols-5">
@@ -50,12 +37,4 @@ export function MeStats({ gists }: MeStatsPropsType) {
       ))}
     </dl>
   );
-}
-
-function sum(gists: GistType[], of: (gist: GistType) => number): number {
-  return gists.reduce((total, gist) => total + of(gist), 0);
-}
-
-function count(gists: GistType[], visibility: GistType['visibility']): number {
-  return gists.filter((gist) => gist.visibility === visibility).length;
 }

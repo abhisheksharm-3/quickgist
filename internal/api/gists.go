@@ -5,24 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
-
-// createGistRequest is the create payload.
-//
-// It is JSON rather than multipart. The previous endpoint took multipart for
-// everything, so a text-only gist, the common case, paid for form parsing and a
-// malformed boundary reported "request too large" for a twenty-byte snippet.
-// Uploads have their own endpoint.
-type createGistRequest struct {
-	Title       string      `json:"title"`
-	Description string      `json:"description"`
-	Visibility  string      `json:"visibility"`
-	ExpiresAt   *time.Time  `json:"expiresAt"`
-	Files       []fileInput `json:"files"`
-}
 
 // CreateGist handles POST /v1/gists.
 func (a *API) CreateGist(w http.ResponseWriter, r *http.Request) {
@@ -80,14 +65,6 @@ func (a *API) GetGist(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Cache-Control", "private, no-cache")
 	a.respond(w, r, http.StatusOK, a.view(r.Context(), gist))
-}
-
-// updateGistRequest carries the metadata to change. An omitted field is left alone.
-type updateGistRequest struct {
-	Title       *string    `json:"title"`
-	Description *string    `json:"description"`
-	Visibility  *string    `json:"visibility"`
-	ExpiresAt   *time.Time `json:"expiresAt"`
 }
 
 // UpdateGist handles PATCH /v1/gists/{slug}.

@@ -4,19 +4,12 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import type { CommandType } from '@/command/commands';
 import { buildUniversalCommands } from '@/command/commands';
+import { filterCommands } from '@/command/filter-commands';
 import { ShortcutSheet } from '@/command/ShortcutSheet';
+import type { CommandPalettePropsType } from '@/command/types';
 import { useGlobalShortcuts } from '@/command/use-global-shortcuts';
 import { cn } from '@/lib/cn';
-
-type CommandPalettePropsType = {
-  commands?: CommandType[];
-  onNew?: (() => void) | undefined;
-  onEdit?: (() => void) | undefined;
-  onFocusSearch?: (() => void) | undefined;
-  onSwitchFile?: ((index: number) => void) | undefined;
-};
 
 export function CommandPalette({
   commands = [],
@@ -160,12 +153,4 @@ export function CommandPalette({
       <ShortcutSheet isOpen={isShortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </>
   );
-}
-
-function filterCommands(commands: CommandType[], query: string): CommandType[] {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) {
-    return commands;
-  }
-  return commands.filter((command) => command.label.toLowerCase().includes(normalized));
 }

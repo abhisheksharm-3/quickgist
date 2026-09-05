@@ -17,24 +17,6 @@ import (
 // an attacker more than it helps a client.
 var ErrUnauthenticated = errors.New("unauthenticated")
 
-// signingMethod is the only accepted algorithm, matching what Supabase signs access
-// tokens with. Constraining it is what makes algorithm confusion impossible: a token
-// asking to be verified as HS256 against the public key is refused before the key is
-// looked up.
-const signingMethod = "ES256"
-
-// tokenAudience is the aud claim Supabase sets on a signed-in user's token.
-const tokenAudience = "authenticated"
-
-// Identity is a verified caller.
-type Identity struct {
-	UserID string
-	Email  string
-	Role   string
-}
-
-type contextKey struct{}
-
 // WithIdentity stores a verified identity on the context.
 func WithIdentity(ctx context.Context, id Identity) context.Context {
 	return context.WithValue(ctx, contextKey{}, id)

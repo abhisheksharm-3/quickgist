@@ -10,13 +10,6 @@ import (
 	"github.com/alecthomas/chroma/v2/styles"
 )
 
-const (
-	darkAttributeSelector  = `[data-theme="dark"]`
-	systemDarkSelector     = `:root:not([data-theme="light"])`
-	lightAttributeSelector = `[data-theme="light"]`
-	systemLightSelector    = `:root:not([data-theme="dark"])`
-)
-
 // CSS returns the stylesheet for rendered code in both themes.
 //
 // It covers three theme states, because there are three: an explicit dark choice, an

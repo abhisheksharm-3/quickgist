@@ -1,14 +1,10 @@
 /** The site footer: the second and last blue field in the product. */
 import { Link } from 'react-router';
 import { useSession } from '@/auth/use-session';
-import type { FooterLinkType } from '@/chrome/footer-links';
-import { FOOTER_COLUMNS } from '@/chrome/footer-links';
+import { columnHeading, footerLink } from '@/chrome/constants';
+import { FOOTER_COLUMNS } from '@/chrome/content';
+import type { FooterLinkPropsType } from '@/chrome/types';
 import { useMyProfile } from '@/lib/use-my-profile';
-
-const footerLink =
-  'text-[13px] leading-[1.55] text-white/90 underline decoration-white/45 underline-offset-[3px] transition-colors hover:text-white hover:decoration-white';
-
-const columnHeading = 'font-mono text-[10px] tracking-[0.14em] text-white/70 uppercase';
 
 /**
  * The footer.
@@ -104,10 +100,6 @@ export function Footer() {
     </footer>
   );
 }
-
-type FooterLinkPropsType = {
-  link: FooterLinkType;
-};
 
 function FooterLink({ link }: FooterLinkPropsType) {
   if (link.external) {

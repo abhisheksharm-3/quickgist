@@ -1,10 +1,7 @@
 /** A `kbd` badge, so a binding sits next to the action it triggers. */
-import { cn } from '@/lib/cn';
 
-type KeyboardBadgePropsType = {
-  children: string;
-  tone?: 'default' | 'onBlue' | undefined;
-};
+import type { KeyboardBadgePropsType } from '@/chrome/types';
+import { cn } from '@/lib/cn';
 
 /**
  * A keyboard hint.

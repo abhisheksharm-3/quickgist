@@ -4,39 +4,9 @@ package store
 
 import (
 	"context"
-	"time"
 
 	"github.com/abhisheksharm-3/quickgist/internal/auth"
 )
-
-// RevisionSummary is one entry in a gist's history.
-type RevisionSummary struct {
-	Revision  int       `json:"revision"`
-	Title     string    `json:"title"`
-	FileCount int       `json:"fileCount"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-// RevisionFile is a file as a revision stored it.
-//
-// A revision holds the same shape the replace endpoint accepts, so restoring is a
-// replace with old input rather than a second code path.
-type RevisionFile struct {
-	Filename    string  `json:"filename"`
-	Language    *string `json:"language,omitempty"`
-	Content     *string `json:"content,omitempty"`
-	StoragePath *string `json:"storage_path,omitempty"`
-	ByteSize    int64   `json:"byte_size,omitempty"`
-}
-
-// Revision is one stored version of a gist.
-type Revision struct {
-	Revision    int            `json:"revision"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	Files       []RevisionFile `json:"files"`
-}
 
 // ListRevisions returns a gist's history, newest first.
 func (s *Store) ListRevisions(ctx context.Context, id *auth.Identity, slug string) ([]RevisionSummary, error) {

@@ -1,24 +1,10 @@
-/** One labelled field in an account form. */
-type AuthFieldPropsType = {
-  name: string;
-  label: string;
-  type?: string | undefined;
-  hint?: string | undefined;
-  error?: string | null | undefined;
-  autoComplete?: string | undefined;
-  required?: boolean | undefined;
-  minLength?: number | undefined;
-  value?: string | undefined;
-  onChange?: ((value: string) => void) | undefined;
-  prefix?: string | undefined;
-};
-
 /**
  * A form field.
  *
  * The hint is always present rather than appearing only on failure, so a password
  * rule is something you read before typing instead of after being rejected.
  */
+import type { AuthFieldPropsType } from '@/auth/types';
 export function AuthField({
   name,
   label,

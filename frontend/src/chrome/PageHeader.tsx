@@ -1,13 +1,5 @@
 /** The band that opens every list-shaped route. */
-import type { ReactNode } from 'react';
-
-type PageHeaderPropsType = {
-  eyebrow: string;
-  title: string;
-  description?: string | undefined;
-  aside?: ReactNode;
-  children?: ReactNode;
-};
+import type { PageHeaderPropsType } from '@/chrome/types';
 
 /**
  * A page header.

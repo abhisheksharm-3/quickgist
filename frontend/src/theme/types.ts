@@ -1,5 +1,5 @@
 /** Theme selection types. */
-
+import type { ReactNode } from 'react';
 /**
  * The three states a theme choice can be in.
  *
@@ -11,4 +11,8 @@ export type ThemeType = 'light' | 'dark' | 'system';
 export type ThemeStateType = {
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
+};
+
+export type ThemeProviderPropsType = {
+  children: ReactNode;
 };

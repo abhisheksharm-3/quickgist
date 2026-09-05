@@ -1,4 +1,5 @@
 /** Shared prop types for the overlay primitives. */
+
 export type SelectOptionType = {
   value: string;
   label: string;

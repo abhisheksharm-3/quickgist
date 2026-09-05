@@ -8,11 +8,7 @@
  * Ctrl elsewhere) or `shift` always fires.
  */
 import { useEffect, useEffectEvent } from 'react';
-
-export type HotkeyBindingType = {
-  combo: string;
-  handler: (event: KeyboardEvent) => void;
-};
+import type { HotkeyBindingType } from '@/chrome/types';
 
 export function useHotkeys(bindings: HotkeyBindingType[]): void {
   const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {

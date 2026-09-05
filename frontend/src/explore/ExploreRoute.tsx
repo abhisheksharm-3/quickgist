@@ -6,14 +6,13 @@ import { ListSkeleton } from '@/chrome/ListSkeleton';
 import { OfflineBand } from '@/chrome/OfflineBand';
 import { PageHeader } from '@/chrome/PageHeader';
 import { CommandPalette } from '@/command/CommandPalette';
+import { SEARCH_DEBOUNCE_MS } from '@/explore/constants';
 import { GistList } from '@/explore/GistList';
 import { LoadMore } from '@/explore/LoadMore';
 import { SearchField } from '@/explore/SearchField';
 import { isNetworkError } from '@/lib/network-error';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
 import { useGistFeed, useGistSearch } from '@/lib/use-gist-queries';
-
-const SEARCH_DEBOUNCE_MS = 250;
 
 export function ExploreRoute() {
   const navigate = useNavigate();

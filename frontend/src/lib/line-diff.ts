@@ -1,14 +1,5 @@
 /** A line diff, for comparing a stored revision with what a gist says now. */
-
-export type DiffKindType = 'same' | 'added' | 'removed';
-
-export type DiffLineType = {
-  kind: DiffKindType;
-  text: string;
-  oldLine: number | null;
-  newLine: number | null;
-};
-
+import { MAX_DIFF_LINES } from '@/lib/constants';
 /**
  * Above this many lines on either side the table is not built.
  *
@@ -16,7 +7,7 @@ export type DiffLineType = {
  * versions of a document and the wrong one for two versions of a megabyte. The
  * caller shows the two files instead of a diff when this returns null.
  */
-const MAX_LINES = 2000;
+import type { DiffLineType } from '@/lib/types';
 
 /**
  * Compares two texts line by line.
@@ -29,7 +20,7 @@ export function diffLines(before: string, after: string): DiffLineType[] | null 
   const oldLines = before.split('\n');
   const newLines = after.split('\n');
 
-  if (oldLines.length > MAX_LINES || newLines.length > MAX_LINES) {
+  if (oldLines.length > MAX_DIFF_LINES || newLines.length > MAX_DIFF_LINES) {
     return null;
   }
 

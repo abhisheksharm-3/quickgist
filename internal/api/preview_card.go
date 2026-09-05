@@ -12,11 +12,6 @@ import (
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
-// A crawler refetches a preview often and the card only changes when the gist does,
-// so it is cached for an hour rather than forever: a renamed gist should not keep
-// showing its old title in every chat it was ever pasted into.
-const previewCacheControl = "public, max-age=3600"
-
 // OGImage handles GET /v1/gists/{slug}/og.png.
 //
 // The image is drawn per request rather than stored. Drawing costs about a

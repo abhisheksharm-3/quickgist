@@ -11,11 +11,6 @@ import (
 	"golang.org/x/time/rate"
 )
 
-const (
-	visitorIdleTimeout = 3 * time.Minute
-	evictInterval      = time.Minute
-)
-
 // limiter is a token bucket per client address.
 type limiter struct {
 	mu       sync.Mutex

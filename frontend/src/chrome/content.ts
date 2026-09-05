@@ -1,15 +1,9 @@
-/** The footer's link columns. */
-
-export type FooterLinkType = {
-  label: string;
-  to: string;
-  external?: boolean;
-};
-
-export type FooterColumnType = {
-  heading: string;
-  links: FooterLinkType[];
-};
+/** What the footer links to.
+ *
+ * Only destinations that exist: a footer full of links to nothing is worse than a
+ * short footer.
+ */
+import type { FooterColumnType } from '@/chrome/types';
 
 const REPOSITORY = 'https://github.com/abhisheksharm-3/quickgist';
 

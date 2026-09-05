@@ -1,11 +1,5 @@
 /** The control that fetches the next page of a list. */
 
-type LoadMorePropsType = {
-  hasMore: boolean;
-  isLoading: boolean;
-  onLoad: () => void;
-};
-
 /**
  * A load-more button.
  *
@@ -14,6 +8,7 @@ type LoadMorePropsType = {
  * nobody chose. When there is nothing more, the row says so instead of disappearing,
  * because a list that simply stops leaves you wondering whether it is still loading.
  */
+import type { LoadMorePropsType } from '@/explore/types';
 export function LoadMore({ hasMore, isLoading, onLoad }: LoadMorePropsType) {
   if (!hasMore) {
     return (

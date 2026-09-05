@@ -1,14 +1,10 @@
-/** The placeholder shown while a list of gists is loading. */
-type ListSkeletonPropsType = {
-  rows?: number | undefined;
-};
-
 /**
  * A loading list.
  *
  * It mirrors the shape of a real row, so the page does not shift when the data
  * lands. A centred spinner would tell a reader less and move everything twice.
  */
+import type { ListSkeletonPropsType } from '@/chrome/types';
 export function ListSkeleton({ rows = 5 }: ListSkeletonPropsType) {
   return (
     <ul

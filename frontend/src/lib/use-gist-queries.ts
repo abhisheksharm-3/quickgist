@@ -7,6 +7,7 @@ import type {
 } from '@tanstack/react-query';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api-client';
+import { FEED_PAGE_SIZE } from '@/lib/constants';
 import {
   deleteGist,
   fetchGist,
@@ -17,6 +18,7 @@ import {
   searchGists,
 } from '@/lib/gist-api';
 import { gistQueryKeys } from '@/lib/query-keys';
+import type { RestoreVariablesType } from '@/lib/types';
 import type {
   FeedCursorType,
   GistType,
@@ -53,9 +55,6 @@ export function useGistList(query: ListGistsQueryType = {}): UseQueryResult<Gist
   });
 }
 
-/** How many gists a page of the feed holds. */
-const PAGE_SIZE = 20;
-
 /**
  * The feed, one page at a time.
  *
@@ -64,7 +63,7 @@ const PAGE_SIZE = 20;
  * slower the further you read, as well as skipping or repeating a row whenever
  * something is published while somebody is paging.
  *
- * A page shorter than PAGE_SIZE is the last one, which saves the request that would
+ * A page shorter than FEED_PAGE_SIZE is the last one, which saves the request that would
  * otherwise be needed to discover the end.
  */
 export function useGistFeed(
@@ -75,13 +74,13 @@ export function useGistFeed(
     queryFn: ({ pageParam }) =>
       listGists({
         ...query,
-        limit: PAGE_SIZE,
+        limit: FEED_PAGE_SIZE,
         ...(pageParam ? { before: pageParam.before, beforeSlug: pageParam.beforeSlug } : {}),
       }),
     initialPageParam: null as FeedCursorType | null,
     getNextPageParam: (lastPage): FeedCursorType | undefined => {
       const last = lastPage[lastPage.length - 1];
-      if (lastPage.length < PAGE_SIZE || !last) {
+      if (lastPage.length < FEED_PAGE_SIZE || !last) {
         return undefined;
       }
       return { before: last.createdAt, beforeSlug: last.slug };
@@ -123,11 +122,6 @@ export function useRevision(
     enabled: slug.length > 0 && revision !== null,
   });
 }
-
-type RestoreVariablesType = {
-  slug: string;
-  revision: number;
-};
 
 export function useRestoreRevision(): UseMutationResult<GistType, ApiError, RestoreVariablesType> {
   const queryClient = useQueryClient();

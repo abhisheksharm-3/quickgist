@@ -2,8 +2,8 @@
 
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
-import type { AuthCapabilitiesType } from '@/lib/auth-providers';
 import { fetchAuthCapabilities } from '@/lib/auth-providers';
+import type { AuthCapabilitiesType } from '@/lib/types';
 
 export function useAuthCapabilities(): UseQueryResult<AuthCapabilitiesType, Error> {
   return useQuery({

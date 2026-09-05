@@ -1,11 +1,7 @@
 /** The link-ready band: one of the product's only two full blue surfaces. */
 import { Check, Copy, X } from 'lucide-react';
 import { useState } from 'react';
-
-type LinkBandPropsType = {
-  url: string;
-  onDismiss: () => void;
-};
+import type { LinkBandPropsType } from '@/gist/types';
 
 /**
  * The band shown once, right after a gist is created.

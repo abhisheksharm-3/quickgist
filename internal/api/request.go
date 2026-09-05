@@ -7,35 +7,12 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
-
-// slugPattern is what generate_slug() produces: twelve characters from a 32-symbol
-// alphabet. A cursor's slug is checked against it rather than passed through, so a
-// crafted value reaches the query as a rejected request instead of a comparison.
-var slugPattern = regexp.MustCompile(`^[a-z0-9]{4,32}$`)
-
-const (
-	maxJSONBody     = 2 << 20
-	maxTextFileSize = 1 << 20
-	maxUploadSize   = 10 << 20
-	maxFilesPerGist = 20
-	defaultPageSize = 30
-	maxPageSize     = 100
-	multipartMemory = 4 << 20
-)
-
-// fileInput is a text file as a client sends it, on create and on replace alike.
-type fileInput struct {
-	Filename string  `json:"filename"`
-	Language *string `json:"language"`
-	Content  string  `json:"content"`
-}
 
 // toNewFiles validates a client's file set and converts it for the store.
 //

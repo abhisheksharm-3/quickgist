@@ -1,13 +1,7 @@
 /** The contents rail beside a long rendered document. */
 import { useEffect, useState } from 'react';
-
-type HeadingType = {
-  id: string;
-  text: string;
-  level: number;
-};
-
-const MIN_HEADINGS = 3;
+import { MIN_HEADINGS } from '@/gist/constants';
+import type { HeadingType } from '@/gist/types';
 
 /**
  * A table of contents, read out of the document that is already on the page.

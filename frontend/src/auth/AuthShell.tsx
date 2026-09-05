@@ -1,34 +1,7 @@
 /** The frame both account pages share. */
-import type { ReactNode } from 'react';
 import { Link } from 'react-router';
-
-const BENEFITS: { title: string; detail: string }[] = [
-  {
-    title: 'Private gists',
-    detail: 'Visible only to you. Anyone else gets the same 404 as a link that never existed.',
-  },
-  {
-    title: 'Editing',
-    detail: 'Change a published gist, add files, or delete it. The link stays the same.',
-  },
-  {
-    title: 'One page with all of it',
-    detail:
-      'Everything you have made, including the unlisted ones you would otherwise have to bookmark.',
-  },
-  {
-    title: 'A handle',
-    detail: 'Your public gists get an address at /u/your-handle.',
-  },
-];
-
-type AuthShellPropsType = {
-  code: string;
-  title: string;
-  intro: string;
-  children: ReactNode;
-  footer: ReactNode;
-};
+import { BENEFITS } from '@/auth/content';
+import type { AuthShellPropsType } from '@/auth/types';
 
 /**
  * The account page frame.

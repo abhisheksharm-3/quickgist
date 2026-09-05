@@ -18,12 +18,13 @@ import { KeyboardBadge } from '@/chrome/KeyboardBadge';
 import { StatusBar } from '@/chrome/StatusBar';
 import { digitSwitchBindings, useHotkeys } from '@/chrome/use-hotkeys';
 import { AttachmentQueue } from '@/editor/AttachmentQueue';
+import { TITLE_SAVE_DEBOUNCE_MS } from '@/editor/constants';
 import { EditorHero } from '@/editor/EditorHero';
 import { createDraftFromGist, createEmptyDraft, editorReducer } from '@/editor/editor-reducer';
 import { PreviewPane } from '@/editor/PreviewPane';
 import { PublishControls } from '@/editor/PublishControls';
 import { SourcePane } from '@/editor/SourcePane';
-import type { EditorActionType } from '@/editor/types';
+import type { EditorActionType, SubmitButtonPropsType } from '@/editor/types';
 import { useAttachments } from '@/editor/use-attachments';
 import { loadPersistedDraft, usePersistDraft } from '@/editor/use-draft-persistence';
 import { usePublish } from '@/editor/use-publish';
@@ -31,8 +32,6 @@ import { updateGist } from '@/lib/gist-api';
 import { useGist } from '@/lib/use-gist-queries';
 import { useMyProfile } from '@/lib/use-my-profile';
 import type { GistType, VisibilityType } from '@/types';
-
-const TITLE_SAVE_DEBOUNCE_MS = 500;
 
 export function EditorRoute(): React.JSX.Element {
   const params = useParams<{ slug: string }>();
@@ -288,12 +287,7 @@ function isMine(gist: GistType, handle: string | undefined): boolean {
   return gist.author !== null && handle !== undefined && gist.author.handle === handle;
 }
 
-type SubmitButtonProps = {
-  label: string;
-  pendingLabel: string;
-};
-
-function SubmitButton({ label, pendingLabel }: SubmitButtonProps): React.JSX.Element {
+function SubmitButton({ label, pendingLabel }: SubmitButtonPropsType): React.JSX.Element {
   const { pending } = useFormStatus();
   return (
     <button

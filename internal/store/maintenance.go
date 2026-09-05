@@ -6,10 +6,6 @@ import (
 	"fmt"
 )
 
-// blobClaimLimit bounds one janitor sweep, matching the ceiling in
-// claim_orphaned_blobs.
-const blobClaimLimit = 1000
-
 // CacheRender stores rendered HTML for a file.
 //
 // It runs without a caller identity because gist_file_renders has row-level security

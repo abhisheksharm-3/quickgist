@@ -4,17 +4,8 @@
  * an edit in progress never clobber each other.
  */
 import { useEffect } from 'react';
+import { STORAGE_PREFIX } from '@/editor/constants';
 import type { EditorDraftType } from '@/editor/types';
-
-/**
- * The version in the prefix is deliberate.
- *
- * v2 came from the default filename gaining a `.md` extension, since a draft stored
- * under the old shape came back with a filename the renderer treats as plain text.
- * v3 discards the empty drafts an edit route used to persist before its gist had
- * loaded, which would otherwise keep opening blank for as long as they are stored.
- */
-const STORAGE_PREFIX = 'quickgist:draft:v3:';
 
 export function loadPersistedDraft(key: string): EditorDraftType | null {
   try {

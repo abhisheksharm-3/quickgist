@@ -1,11 +1,7 @@
 /** The `?` sheet listing the whole keyboard map. */
 import { useEffect, useRef } from 'react';
-import { KEYBOARD_MAP } from '@/command/commands';
-
-type ShortcutSheetPropsType = {
-  isOpen: boolean;
-  onClose: () => void;
-};
+import { KEYBOARD_MAP } from '@/command/content';
+import type { ShortcutSheetPropsType } from '@/command/types';
 
 export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetPropsType) {
   const dialogRef = useRef<HTMLDialogElement>(null);

@@ -18,17 +18,6 @@ import (
 	goldmarkhtml "github.com/yuin/goldmark/renderer/html"
 )
 
-// rendererVersion identifies the output format. Any change to the goldmark
-// extensions, the chroma options, or the sanitizer policy must bump it, because
-// Hash derives the render cache key from it and stale rows are detected by nothing
-// else.
-const rendererVersion = "r5"
-
-const (
-	lightStyle = oneLightStyleName
-	darkStyle  = "onedark"
-)
-
 // Renderer converts file content to HTML. Safe for concurrent use.
 type Renderer struct {
 	md     goldmark.Markdown

@@ -1,44 +1,11 @@
 /** The navigation sheet that rises from the bottom on a narrow screen. */
-import { ChevronRight, Monitor, Moon, Sun } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
-import type { ThemeType } from '@/theme/types';
+import { row } from '@/chrome/constants';
+import type { MobileNavPropsType } from '@/chrome/types';
+import { NEXT_THEME, THEME_ACTION, THEME_ICON } from '@/theme/constants';
 import { useTheme } from '@/theme/use-theme';
-
-export type MobileNavLinkType = {
-  to: string;
-  label: string;
-};
-
-type MobileNavPropsType = {
-  open: boolean;
-  onClose: () => void;
-  links: MobileNavLinkType[];
-  isAuthenticated: boolean;
-  isAuthAvailable: boolean;
-  onSignOut: () => void;
-};
-
-const NEXT_THEME: Record<ThemeType, ThemeType> = {
-  system: 'light',
-  light: 'dark',
-  dark: 'system',
-};
-
-const THEME_ACTION: Record<ThemeType, string> = {
-  system: 'Use the light theme',
-  light: 'Use the dark theme',
-  dark: 'Follow the system theme',
-};
-
-const THEME_ICON: Record<ThemeType, typeof Monitor> = {
-  system: Monitor,
-  light: Sun,
-  dark: Moon,
-};
-
-const row =
-  'flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3.5 text-[14px] text-[var(--text)]';
 
 /**
  * The mobile navigation sheet.

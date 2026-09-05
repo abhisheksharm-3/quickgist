@@ -3,40 +3,10 @@ package api
 
 import (
 	"context"
-	"time"
 
 	"github.com/abhisheksharm-3/quickgist/internal/render"
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
-
-const cacheWriteTimeout = 5 * time.Second
-
-// fileView is a file as a client sees it: rendered, with its source alongside so a
-// copy button needs no second request.
-type fileView struct {
-	Filename      string      `json:"filename"`
-	Language      *string     `json:"language"`
-	Kind          render.Kind `json:"kind"`
-	ByteSize      int64       `json:"byteSize"`
-	Content       *string     `json:"content,omitempty"`
-	HTML          string      `json:"html,omitempty"`
-	RawURL        string      `json:"rawUrl"`
-	BlobExpiresAt *time.Time  `json:"blobExpiresAt,omitempty"`
-}
-
-// gistView is a gist as a client sees it.
-type gistView struct {
-	Slug        string        `json:"slug"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Visibility  string        `json:"visibility"`
-	ViewCount   int64         `json:"viewCount"`
-	CreatedAt   time.Time     `json:"createdAt"`
-	UpdatedAt   time.Time     `json:"updatedAt"`
-	ExpiresAt   *time.Time    `json:"expiresAt"`
-	Author      *store.Author `json:"author"`
-	Files       []fileView    `json:"files"`
-}
 
 // view renders a gist for a client, filling the render cache on a miss.
 func (a *API) view(ctx context.Context, g *store.Gist) gistView {

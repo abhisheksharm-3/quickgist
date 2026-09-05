@@ -1,13 +1,7 @@
 /** One file of a revision, compared with the same file now. */
 import { DiffTable } from '@/history/DiffTable';
+import type { FileDiffPropsType } from '@/history/types';
 import { diffLines, hasChanges } from '@/lib/line-diff';
-import type { GistType, RevisionType } from '@/types';
-
-type FileDiffPropsType = {
-  filename: string;
-  stored: RevisionType;
-  gist: GistType | undefined;
-};
 
 /**
  * One file, compared.

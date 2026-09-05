@@ -1,14 +1,9 @@
 /** Holds the theme choice and keeps the root element in step with it. */
 
-import type { ReactNode } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { ThemeContext } from '@/theme/theme-context';
 import { applyTheme, readStoredTheme, writeStoredTheme } from '@/theme/theme-storage';
-import type { ThemeStateType, ThemeType } from '@/theme/types';
-
-type ThemeProviderPropsType = {
-  children: ReactNode;
-};
+import type { ThemeProviderPropsType, ThemeStateType, ThemeType } from '@/theme/types';
 
 /**
  * Provides the theme choice.

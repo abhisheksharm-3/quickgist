@@ -17,18 +17,6 @@ var (
 	ErrInvalid   = errors.New("invalid")
 )
 
-// Postgres error codes this layer recognises. Anything else is a real fault and is
-// returned unwrapped so it reaches the error reporter.
-const (
-	codeNotNullViolation    = "23502"
-	codeForeignKeyViolation = "23503"
-	codeUniqueViolation     = "23505"
-	codeCheckViolation      = "23514"
-	codeStringDataTooLong   = "22001"
-	codeInvalidTextRepr     = "22P02"
-	codeInsufficientPrivs   = "42501"
-)
-
 // translate maps a database error onto a sentinel so handlers never inspect SQLSTATE
 // and no database message reaches a client unexamined.
 func translate(err error) error {

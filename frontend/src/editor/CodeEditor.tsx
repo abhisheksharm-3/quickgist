@@ -8,15 +8,8 @@ import { EditorView, keymap, lineNumbers, placeholder } from '@codemirror/view';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { findLanguage, loadLanguage } from '@/editor/codemirror-languages';
 import { editorTheme, lightHighlightStyle } from '@/editor/codemirror-theme';
+import type { CodeEditorPropsType } from '@/editor/types';
 import { useResolvedTheme } from '@/theme/use-resolved-theme';
-
-type CodeEditorPropsType = {
-  value: string;
-  onChange: (value: string) => void;
-  filename: string;
-  language: string | null;
-  ariaLabel: string;
-};
 
 /**
  * The editor.

@@ -4,15 +4,11 @@
  * instead.
  */
 import { useEffect, useState } from 'react';
-import type { DraftFileType } from '@/editor/types';
+import type { PreviewIndicatorPropsType, PreviewPanePropsType } from '@/editor/types';
 import { usePreview } from '@/editor/use-preview';
 import { useMermaid } from '@/gist/use-mermaid';
 
-type PreviewPaneProps = {
-  file: DraftFileType;
-};
-
-export function PreviewPane({ file }: PreviewPaneProps): React.JSX.Element {
+export function PreviewPane({ file }: PreviewPanePropsType): React.JSX.Element {
   const { html, status, isStale, retryAfterSeconds } = usePreview(file);
   const countdown = useCountdown(retryAfterSeconds);
   const [documentElement, setDocumentElement] = useState<HTMLElement | null>(null);
@@ -40,17 +36,11 @@ export function PreviewPane({ file }: PreviewPaneProps): React.JSX.Element {
   );
 }
 
-type PreviewIndicatorProps = {
-  status: ReturnType<typeof usePreview>['status'];
-  isStale: boolean;
-  countdown: number | null;
-};
-
 function PreviewIndicator({
   status,
   isStale,
   countdown,
-}: PreviewIndicatorProps): React.JSX.Element | null {
+}: PreviewIndicatorPropsType): React.JSX.Element | null {
   if (status === 'pending') {
     return <span aria-live="polite">Updating…</span>;
   }

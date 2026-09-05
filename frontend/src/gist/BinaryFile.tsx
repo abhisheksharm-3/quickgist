@@ -1,11 +1,8 @@
 /** An uploaded file: its size, and its expiry once the blob storage has cleared it. */
-import { panelId, tabId } from '@/chrome/FileTabs';
-import { formatBytes } from '@/lib/format-bytes';
-import type { GistFileType } from '@/types';
 
-type BinaryFilePropsType = {
-  file: GistFileType;
-};
+import type { BinaryFilePropsType } from '@/gist/types';
+import { formatBytes } from '@/lib/format-bytes';
+import { panelId, tabId } from '@/lib/tab-ids';
 
 export function BinaryFile({ file }: BinaryFilePropsType) {
   const expiresAt = file.blobExpiresAt ? new Date(file.blobExpiresAt) : null;

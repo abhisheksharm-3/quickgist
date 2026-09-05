@@ -1,21 +1,13 @@
 /** Discovering which sign-in methods the Supabase project actually has enabled. */
 import { z } from 'zod';
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/env';
+import type { AuthCapabilitiesType } from '@/lib/types';
 
 const SettingsSchema = z.object({
   external: z.record(z.string(), z.boolean()).default({}),
   disable_signup: z.boolean().default(false),
   mailer_autoconfirm: z.boolean().default(false),
 });
-
-export type AuthCapabilitiesType = {
-  oauthProviders: string[];
-  isEmailEnabled: boolean;
-  isSignupEnabled: boolean;
-  needsEmailConfirmation: boolean;
-};
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 /**
  * Asks the project which sign-in methods work.
@@ -26,7 +18,7 @@ const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
  */
 export async function fetchAuthCapabilities(): Promise<AuthCapabilitiesType> {
   const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
-    headers: { apikey: PUBLISHABLE_KEY },
+    headers: { apikey: SUPABASE_PUBLISHABLE_KEY },
   });
 
   if (!response.ok) {

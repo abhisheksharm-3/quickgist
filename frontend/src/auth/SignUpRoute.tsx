@@ -3,14 +3,13 @@ import { useActionState, useState } from 'react';
 import { Link } from 'react-router';
 import { AuthField } from '@/auth/AuthField';
 import { AuthShell } from '@/auth/AuthShell';
+import { MIN_PASSWORD_LENGTH } from '@/auth/constants';
 import { handleError, suggestHandle } from '@/auth/handle-rules';
 import { OAuthButtons } from '@/auth/OAuthButtons';
 import type { AuthFormResultType } from '@/auth/types';
 import { useSession } from '@/auth/use-session';
 import { isAuthConfigured } from '@/lib/supabase-client';
 import { useAuthCapabilities } from '@/lib/use-auth-capabilities';
-
-const MIN_PASSWORD_LENGTH = 8;
 
 /**
  * The sign-up page.

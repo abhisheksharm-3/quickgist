@@ -7,19 +7,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/abhisheksharm-3/quickgist/internal/auth"
-)
-
-const (
-	connectionLifetime = time.Hour
-	connectionIdleTime = 30 * time.Minute
-	healthCheckPeriod  = time.Minute
 )
 
 // Store holds the connection pool.

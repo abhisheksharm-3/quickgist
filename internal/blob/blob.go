@@ -12,22 +12,12 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // ErrNotFound means no object exists at that path.
 var ErrNotFound = errors.New("blob not found")
-
-const (
-	requestTimeout = 60 * time.Second
-	idleTimeout    = 90 * time.Second
-	maxIdleConns   = 50
-	maxIdlePerHost = 10
-	errorBodyLimit = 512
-	drainLimit     = 4 << 10
-)
 
 // Store is a handle on one storage bucket.
 //
@@ -63,15 +53,6 @@ func New(supabaseURL, bucket, serviceKey string) *Store {
 // objects group per gist and one gist's files cannot collide with another's.
 func ObjectPath(slug, filename string) string {
 	return path.Join(slug, path.Base(filename))
-}
-
-// Object is an open download. The caller must Close it.
-type Object struct {
-	Body          io.ReadCloser
-	ContentType   string
-	ContentLength int64
-	ETag          string
-	LastModified  string
 }
 
 // Close releases the underlying response body.

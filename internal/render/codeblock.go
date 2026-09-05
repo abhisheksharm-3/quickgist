@@ -2,16 +2,9 @@
 package render
 
 import (
-	"regexp"
-
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/util"
 )
-
-// languagePattern is what may reach the data-language attribute. The fence info
-// string is written by the gist's author, so the value is matched rather than
-// trusted, both here and again by the sanitizer.
-var languagePattern = regexp.MustCompile(`^[A-Za-z0-9_+#.-]{1,32}$`)
 
 // wrapCodeBlock writes the element around a fenced block, carrying the language the
 // fence declared.

@@ -7,10 +7,9 @@ import { PageHeader } from '@/chrome/PageHeader';
 import { RouteError } from '@/chrome/RouteError';
 import { RevisionDiff } from '@/history/RevisionDiff';
 import { cn } from '@/lib/cn';
+import { formatDateTime } from '@/lib/format-date';
 import { useGist, useRevisions } from '@/lib/use-gist-queries';
 import { useMyProfile } from '@/lib/use-my-profile';
-
-const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
 /**
  * The history page.
@@ -93,7 +92,7 @@ export function HistoryRoute() {
                     </span>
                   </p>
                   <p className="mt-1 text-[12px] text-[var(--dim)]">
-                    {dateTime.format(new Date(revision.createdAt))}
+                    {formatDateTime(revision.createdAt)}
                   </p>
                 </button>
               </li>

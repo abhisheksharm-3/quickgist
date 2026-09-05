@@ -1,13 +1,5 @@
+import { HANDLE_PATTERN } from '@/auth/constants';
 /** Validating a handle in the browser, against the same rule the database uses. */
-
-/**
- * The pattern from the profiles table's check constraint.
- *
- * It is repeated here so somebody choosing a handle is told immediately rather than
- * after a round trip, and the two must stay in step: the database is the authority
- * and this is only a courtesy.
- */
-const HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]{1,38}$/;
 
 export function handleError(handle: string): string | null {
   if (handle.length === 0) {

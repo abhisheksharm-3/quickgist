@@ -6,16 +6,12 @@
  * of rendering on the server: the browser downloads no highlighter at all.
  */
 import { useState } from 'react';
-import { panelId, tabId } from '@/chrome/FileTabs';
 import { DocumentToc } from '@/gist/DocumentToc';
+import type { RenderedFilePropsType } from '@/gist/types';
 import { useCodeCopy } from '@/gist/use-code-copy';
 import { useLineAnchors } from '@/gist/use-line-anchors';
 import { useMermaid } from '@/gist/use-mermaid';
-import type { GistFileType } from '@/types';
-
-type RenderedFilePropsType = {
-  file: GistFileType;
-};
+import { panelId, tabId } from '@/lib/tab-ids';
 
 /**
  * One rendered file.

@@ -1,14 +1,8 @@
 /** Buttons for whichever OAuth providers the project actually has enabled. */
+
+import { PROVIDER_LABELS } from '@/auth/content';
 import { useSession } from '@/auth/use-session';
 import { useAuthCapabilities } from '@/lib/use-auth-capabilities';
-
-const PROVIDER_LABELS: Record<string, string> = {
-  github: 'GitHub',
-  gitlab: 'GitLab',
-  google: 'Google',
-  bitbucket: 'Bitbucket',
-  azure: 'Microsoft',
-};
 
 /**
  * The OAuth options.

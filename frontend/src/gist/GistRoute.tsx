@@ -4,20 +4,18 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { FileTabs } from '@/chrome/FileTabs';
 import { OfflineBand } from '@/chrome/OfflineBand';
 import { CommandPalette } from '@/command/CommandPalette';
-import type { CommandType } from '@/command/commands';
+import type { CommandType } from '@/command/types';
 import { BinaryFile } from '@/gist/BinaryFile';
 import { DeleteGistDialog } from '@/gist/DeleteGistDialog';
 import { GistMeta } from '@/gist/GistMeta';
 import { LinkBand } from '@/gist/LinkBand';
 import { RenderedFile } from '@/gist/RenderedFile';
+import type { LocationStateType } from '@/gist/types';
+import { cardUrlFor, rawUrlFor } from '@/lib/gist-urls';
 import { isNetworkError } from '@/lib/network-error';
 import { useDeleteGist, useGist, useRevisions } from '@/lib/use-gist-queries';
 import { useMyProfile } from '@/lib/use-my-profile';
 import type { GistFileType } from '@/types';
-
-type LocationStateType = {
-  justCreated?: boolean;
-};
 
 export function GistRoute() {
   const { slug = '' } = useParams();
@@ -165,18 +163,6 @@ export function GistRoute() {
       />
     </>
   );
-}
-
-/** The link-preview card the API draws for this gist. */
-function cardUrlFor(slug: string): string {
-  const base = import.meta.env.VITE_API_BASE_URL ?? '';
-  return `${base}/v1/gists/${slug}/og.png`;
-}
-
-/** Where a file's unrendered source lives, matching the API's raw route. */
-function rawUrlFor(slug: string, filename: string): string {
-  const base = import.meta.env.VITE_API_BASE_URL ?? '';
-  return `${base}/v1/gists/${slug}/raw/${encodeURIComponent(filename)}`;
 }
 
 function GistSkeleton() {

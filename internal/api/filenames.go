@@ -9,22 +9,6 @@ import (
 	"strings"
 )
 
-const maxFilenameLength = 255
-
-// activeTypes are media types a browser would execute or render as a document. User
-// content is never served as one of these.
-var activeTypes = map[string]struct{}{
-	"text/html":                {},
-	"application/xhtml+xml":    {},
-	"image/svg+xml":            {},
-	"application/xml":          {},
-	"text/xml":                 {},
-	"application/javascript":   {},
-	"text/javascript":          {},
-	"application/x-javascript": {},
-	"application/pdf":          {},
-}
-
 // safeFilename validates a client-supplied filename.
 //
 // It must be a single path segment: no directories, no traversal, no absolute path.

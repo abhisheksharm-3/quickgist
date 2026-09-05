@@ -1,8 +1,6 @@
 /** The browser auth client. */
 import { AuthClient } from '@supabase/auth-js';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+import { IS_AUTH_CONFIGURED, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/env';
 
 /**
  * Whether authentication is configured.
@@ -11,7 +9,7 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
  * app threw on a missing Clerk key, so one absent environment variable produced a
  * white screen with no rendering and no message.
  */
-export const isAuthConfigured: boolean = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
+export const isAuthConfigured: boolean = IS_AUTH_CONFIGURED;
 
 /**
  * The auth client, or null when authentication is not configured.

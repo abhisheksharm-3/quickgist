@@ -7,10 +7,10 @@
  * backend builds, so every message a user saw was a bare status number.
  */
 import type { z } from 'zod';
+import { API_BASE_URL } from '@/lib/env';
 import { auth } from '@/lib/supabase-client';
+import type { RequestOptionsType } from '@/lib/types';
 import { ApiErrorSchema } from '@/schemas';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 /** An error the API reported, with the machine-readable code intact. */
 export class ApiError extends Error {
@@ -34,13 +34,6 @@ export class ApiError extends Error {
     return this.status === 404;
   }
 }
-
-type RequestOptionsType = {
-  method?: string;
-  body?: unknown;
-  query?: Record<string, string | number | undefined>;
-  signal?: AbortSignal;
-};
 
 /**
  * Sends a request and validates the response against `schema`.

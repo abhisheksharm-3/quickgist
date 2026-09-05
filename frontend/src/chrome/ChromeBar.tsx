@@ -4,19 +4,12 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useSession } from '@/auth/use-session';
 import { BrandMark } from '@/chrome/BrandMark';
+import { navLink, pill, primary } from '@/chrome/constants';
 import { KeyboardBadge } from '@/chrome/KeyboardBadge';
 import { MobileNav } from '@/chrome/MobileNav';
 import { ThemeToggle } from '@/chrome/ThemeToggle';
 import { cn } from '@/lib/cn';
 import { isAuthConfigured } from '@/lib/supabase-client';
-
-const navLink = 'text-[13px] text-[var(--dim)] transition-colors hover:text-[var(--heading)]';
-
-const pill =
-  'flex items-center gap-2 border border-[var(--border-strong)] bg-[var(--panel-2)] px-2.5 py-1 text-[12px] text-[var(--dim)] transition-colors hover:border-[var(--dim)] hover:text-[var(--heading)]';
-
-const primary =
-  'bg-[var(--blue-action)] px-3.5 py-1.5 text-[12.5px] font-medium text-white transition-colors hover:bg-[color-mix(in_oklab,var(--blue-action)_88%,black)]';
 
 /**
  * The application bar.

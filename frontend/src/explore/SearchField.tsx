@@ -1,11 +1,6 @@
 /** The search input for the public feed, focusable from outside via `ref`. */
 import { Search } from 'lucide-react';
-
-type SearchFieldPropsType = {
-  value: string;
-  onChange: (value: string) => void;
-  ref?: React.Ref<HTMLInputElement>;
-};
+import type { SearchFieldPropsType } from '@/explore/types';
 
 export function SearchField({ value, onChange, ref }: SearchFieldPropsType) {
   return (

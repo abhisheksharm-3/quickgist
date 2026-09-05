@@ -1,17 +1,10 @@
 /** The writing surface. */
 import { lazy, Suspense } from 'react';
+import type { SourceFallbackPropsType, SourcePanePropsType } from '@/editor/types';
 
 const CodeEditor = lazy(async () => ({
   default: (await import('@/editor/CodeEditor')).CodeEditor,
 }));
-
-type SourcePanePropsType = {
-  value: string;
-  onChange: (value: string) => void;
-  filename: string;
-  language: string | null;
-  ariaLabel: string;
-};
 
 /**
  * The source editor.
@@ -43,10 +36,6 @@ export function SourcePane({
     </Suspense>
   );
 }
-
-type SourceFallbackPropsType = {
-  value: string;
-};
 
 function SourceFallback({ value }: SourceFallbackPropsType) {
   return (

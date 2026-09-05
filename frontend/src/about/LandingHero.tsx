@@ -1,12 +1,6 @@
 /** The first screen of the landing page. */
 import { Link } from 'react-router';
-
-const SPECS: { label: string; value: string }[] = [
-  { label: 'Rendered', value: 'on the server' },
-  { label: 'Account', value: 'not required' },
-  { label: 'Files per gist', value: 'up to 20' },
-  { label: 'Uploads kept', value: '30 days, capped' },
-];
+import { SPECS } from '@/about/content';
 
 /**
  * The hero.

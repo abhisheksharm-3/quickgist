@@ -3,13 +3,6 @@ package store
 
 import "time"
 
-// Visibility values, matching the gist_visibility enum in 0001_init.sql.
-const (
-	VisibilityPublic   = "public"
-	VisibilityUnlisted = "unlisted"
-	VisibilityPrivate  = "private"
-)
-
 // ValidVisibility reports whether v is one of the three enum values. Callers must
 // check this before passing a visibility to the database, so an unknown value
 // becomes a validation error rather than a failed cast.
@@ -72,12 +65,6 @@ type NewFile struct {
 	RetentionDays *int    `json:"retention_days,omitempty"`
 }
 
-// MaxRetentionDays is the ceiling on how long an upload is kept. The
-// blob_retention_within_ceiling constraint enforces it; this constant exists so the
-// API can reject an out-of-range request with a clear error instead of letting the
-// database clamp it silently.
-const MaxRetentionDays = 30
-
 // CreateGistInput is a request to create a gist.
 type CreateGistInput struct {
 	Title       string
@@ -93,4 +80,33 @@ type UpdateGistInput struct {
 	Description *string
 	Visibility  *string
 	ExpiresAt   *time.Time
+}
+
+// RevisionSummary is one entry in a gist's history.
+type RevisionSummary struct {
+	Revision  int       `json:"revision"`
+	Title     string    `json:"title"`
+	FileCount int       `json:"fileCount"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+// RevisionFile is a file as a revision stored it.
+//
+// A revision holds the same shape the replace endpoint accepts, so restoring is a
+// replace with old input rather than a second code path.
+type RevisionFile struct {
+	Filename    string  `json:"filename"`
+	Language    *string `json:"language,omitempty"`
+	Content     *string `json:"content,omitempty"`
+	StoragePath *string `json:"storage_path,omitempty"`
+	ByteSize    int64   `json:"byte_size,omitempty"`
+}
+
+// Revision is one stored version of a gist.
+type Revision struct {
+	Revision    int            `json:"revision"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	Files       []RevisionFile `json:"files"`
 }

@@ -1,11 +1,8 @@
 /** The standard way a route reports a failed request. */
 import { EmptyState } from '@/chrome/EmptyState';
+import type { RouteErrorPropsType } from '@/chrome/types';
 import { ApiError } from '@/lib/api-client';
 import { isNetworkError } from '@/lib/network-error';
-
-type RouteErrorPropsType = {
-  error: Error;
-};
 
 /**
  * A failed request, explained.

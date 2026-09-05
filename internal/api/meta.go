@@ -49,13 +49,6 @@ func (a *API) HighlightCSS(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// healthResponse is what the health endpoint returns.
-type healthResponse struct {
-	Status   string `json:"status"`
-	Version  string `json:"version"`
-	Database string `json:"database,omitempty"`
-}
-
 // Health handles GET /v1/health.
 //
 // It reports the database, because a server that cannot reach Postgres is not

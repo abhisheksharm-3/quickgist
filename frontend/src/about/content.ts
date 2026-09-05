@@ -1,15 +1,52 @@
-/** What this project is built from, for the about page. */
+/** What the landing page says.
+ *
+ * Copy lives apart from the components that lay it out, so a wording change is an
+ * edit to prose rather than to markup.
+ */
+import type { FeatureType, HeroSpecType, ShortcutRowType, StackRowType } from '@/about/types';
 
-export type StackRowType = {
-  layer: string;
-  choice: string;
-  reason: string;
-};
+export const FEATURES: FeatureType[] = [
+  {
+    index: '01',
+    title: 'Rendered before it reaches you',
+    detail:
+      'goldmark and chroma run on the server and the HTML is cached in Postgres, so the page arrives finished. Your browser downloads no highlighter, and the preview you wrote against is the page your reader opens.',
+  },
+  {
+    index: '02',
+    title: 'One link, three visibilities',
+    detail:
+      'A gist is unlisted by default: anyone with the link can read it, and nothing lists it. Public puts it in the feed and in search. Private is yours alone, and everyone else gets the same 404 as a link that never existed.',
+  },
+  {
+    index: '03',
+    title: 'A gist is a set of files',
+    detail:
+      'Up to twenty of them, each a tab, each rendered by its own extension. Drop files in from disk; anything that is not text is uploaded and kept for at most 30 days, which the database enforces rather than the interface suggesting it.',
+  },
+];
 
-export type ShortcutRowType = {
-  keys: string;
-  action: string;
-};
+export const SPECS: HeroSpecType[] = [
+  { label: 'Rendered', value: 'on the server' },
+  { label: 'Account', value: 'not required' },
+  { label: 'Files per gist', value: 'up to 20' },
+  { label: 'Uploads kept', value: '30 days, capped' },
+];
+
+export const SOURCE = `# Deploy notes
+
+Two things to check **before** the release:
+
+| Step | Owner |
+| --- | --- |
+| Migrate | backend |
+| Smoke test | anyone |
+
+\`\`\`go
+func main() {
+	fmt.Println("ready")
+}
+\`\`\``;
 
 /**
  * The stack, with the reason for each choice rather than a badge wall.

@@ -16,11 +16,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-const (
-	fetchTimeout   = 5 * time.Second
-	refreshBackoff = time.Minute
-)
-
 // Verifier validates access tokens against a cached JWKS.
 type Verifier struct {
 	jwksURL string
@@ -105,17 +100,6 @@ func (v *Verifier) refresh(ctx context.Context) error {
 	return nil
 }
 
-// jwksDocument is the subset of a JWKS this verifier reads.
-type jwksDocument struct {
-	Keys []struct {
-		Kid string `json:"kid"`
-		Kty string `json:"kty"`
-		Crv string `json:"crv"`
-		X   string `json:"x"`
-		Y   string `json:"y"`
-	} `json:"keys"`
-}
-
 // fetchJWKS downloads the key set.
 func (v *Verifier) fetchJWKS(ctx context.Context) (*jwksDocument, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, v.jwksURL, nil)
@@ -139,9 +123,6 @@ func (v *Verifier) fetchJWKS(ctx context.Context) (*jwksDocument, error) {
 	}
 	return &doc, nil
 }
-
-// coordinateLength is the byte width of one P-256 coordinate.
-const coordinateLength = 32
 
 // parseKeys converts a key set into public keys, keeping only P-256 EC keys to
 // match the single accepted signing method. A malformed entry is skipped rather

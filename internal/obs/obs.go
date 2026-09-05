@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel"
@@ -18,22 +17,6 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 )
-
-const flushTimeout = 5 * time.Second
-
-// Options configures observability. An empty SentryDSN or OTLPEndpoint disables
-// that exporter.
-type Options struct {
-	ServiceName    string
-	ServiceVersion string
-	Environment    string
-	SentryDSN      string
-	OTLPEndpoint   string
-}
-
-// Shutdown flushes the exporters. It is always non-nil, so a caller can defer it
-// unconditionally even when setup failed.
-type Shutdown func(context.Context) error
 
 // Setup initialises tracing and error reporting and returns a flush function.
 func Setup(ctx context.Context, opts Options, log *slog.Logger) (Shutdown, error) {

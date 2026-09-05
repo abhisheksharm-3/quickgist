@@ -3,27 +3,7 @@ package api
 
 import (
 	"net/http"
-
-	"github.com/abhisheksharm-3/quickgist/internal/render"
 )
-
-// previewRateLimitRPS and previewRateLimitBurst are deliberately tighter than the
-// global limit, and are enforced even when RATE_LIMIT_ENABLED is false. Rendering
-// is CPU-bound and this is the only endpoint that runs it for an anonymous caller,
-// so its budget is a safety limit rather than a fairness one.
-//
-// The rate must stay at or above the editor's debounce, or ordinary typing earns a
-// 429. The debounce is 400ms, so a typist can ask for 2.5 renders a second.
-const (
-	previewRateLimitRPS   = 4
-	previewRateLimitBurst = 8
-)
-
-// previewResponse is what Preview returns.
-type previewResponse struct {
-	Kind render.Kind `json:"kind"`
-	HTML string      `json:"html"`
-}
 
 // Preview handles POST /v1/preview.
 //

@@ -1,12 +1,7 @@
 /** One file's diff, as a two-gutter table. */
-import type { DiffLineType } from '@/lib/line-diff';
 
-type DiffTablePropsType = {
-  lines: DiffLineType[];
-};
-
-const gutter =
-  'w-10 shrink-0 px-2 text-right font-mono text-[10px] text-[var(--faint)] select-none';
+import { gutter } from '@/history/constants';
+import type { DiffTablePropsType } from '@/history/types';
 
 /**
  * A diff.

@@ -6,9 +6,6 @@ import (
 	"github.com/alecthomas/chroma/v2/styles"
 )
 
-// oneLightStyleName is the style registered below and used as lightStyle.
-const oneLightStyleName = "one-light"
-
 // init registers One Light before anything in this package calls styles.Get, since
 // chroma has no built-in light theme matching the product's palette the way
 // onedark covers dark.

@@ -1,21 +1,11 @@
 /** Publishing a draft: create or save, send the queued uploads, then navigate. */
 import { useActionState, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import type { DraftFileType, EditorDraftType, PublishSettingsType } from '@/editor/types';
-import type { AttachmentsType } from '@/editor/use-attachments';
+import type { DraftFileType, PublishInputType, PublishResultType } from '@/editor/types';
+
 import { clearPersistedDraft } from '@/editor/use-draft-persistence';
 import { createGist, replaceGistFiles, updateGist } from '@/lib/gist-api';
 import type { FileInputType } from '@/types';
-
-export type PublishResultType = { status: 'idle' } | { status: 'error'; message: string };
-
-type PublishInputType = {
-  slug: string | undefined;
-  draft: EditorDraftType;
-  settings: PublishSettingsType;
-  attachments: AttachmentsType;
-  persistenceKey: string;
-};
 
 /**
  * The publish action, as a form action.

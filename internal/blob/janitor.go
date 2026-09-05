@@ -7,24 +7,6 @@ import (
 	"time"
 )
 
-const (
-	sweepInterval = 10 * time.Minute
-	sweepBatch    = 100
-)
-
-// Queue is the orphaned-blob work queue.
-//
-// Deleting a gist_files row enqueues its storage path by trigger, so every deletion
-// path arrives here: an author deleting a gist, the upload retention sweep, and the
-// cascade from an expiring gist.
-//
-// It is an interface so this package stays about object storage and does not import
-// the database layer.
-type Queue interface {
-	ClaimOrphanedBlobs(ctx context.Context, limit int) ([]string, error)
-	ReleaseOrphanedBlob(ctx context.Context, path string) error
-}
-
 // Janitor deletes bucket objects whose rows have been removed.
 //
 // Postgres cannot reach the bucket, so without this an expired upload's bytes would

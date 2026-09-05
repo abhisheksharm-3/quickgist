@@ -1,15 +1,10 @@
 /** The frame every route renders inside. */
-import type { ReactNode } from 'react';
 import { AppErrorBoundary } from '@/chrome/AppErrorBoundary';
 import { ChromeBar } from '@/chrome/ChromeBar';
 import { Footer } from '@/chrome/Footer';
 import { OfflineBand } from '@/chrome/OfflineBand';
-
-type AppFramePropsType = {
-  children: ReactNode;
-};
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+import type { AppFramePropsType } from '@/chrome/types';
+import { API_BASE_URL } from '@/lib/env';
 
 /**
  * The application shell.

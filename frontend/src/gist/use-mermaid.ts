@@ -1,8 +1,7 @@
 /** Drawing the mermaid blocks inside a rendered document. */
 import { useEffect } from 'react';
+import { SELECTOR } from '@/gist/constants';
 import { useResolvedTheme } from '@/theme/use-resolved-theme';
-
-const SELECTOR = '[data-language="mermaid"]';
 
 /**
  * Turns every mermaid block in `container` into a diagram.

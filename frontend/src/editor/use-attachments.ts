@@ -1,18 +1,13 @@
 /** Files chosen from disk, on their way into a draft or into blob storage. */
 import { useCallback, useState } from 'react';
-import type { AttachmentType } from '@/editor/attachments';
 import { readAttachment } from '@/editor/attachments';
-import type { AttachedTextType, EditorActionType } from '@/editor/types';
+import type {
+  AttachedTextType,
+  AttachmentsType,
+  AttachmentType,
+  EditorActionType,
+} from '@/editor/types';
 import { uploadGistFile } from '@/lib/gist-api';
-
-export type AttachmentsType = {
-  queued: File[];
-  notice: string | null;
-  accept: (chosen: FileList | File[] | null) => Promise<void>;
-  remove: (name: string) => void;
-  uploadQueued: (slug: string) => Promise<void>;
-  clear: () => void;
-};
 
 /**
  * Attaching files to the draft being edited.

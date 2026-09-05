@@ -11,11 +11,6 @@ import (
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
-const (
-	defaultPasteFilename = "paste.md"
-	maxPasteExpiryDays   = 365
-)
-
 // Paste handles POST /v1/paste.
 //
 // It exists so a shell can use this service without composing JSON:

@@ -7,6 +7,8 @@
  * valid index into `files`. An action that would break either invariant is a
  * no-op instead.
  */
+
+import { DEFAULT_FILE_EXTENSION, MAX_FILES_PER_GIST } from '@/editor/constants';
 import type {
   AttachedTextType,
   DraftFileType,
@@ -15,22 +17,10 @@ import type {
 } from '@/editor/types';
 import type { GistType } from '@/types';
 
-/**
- * The default filename carries a Markdown extension deliberately.
- *
- * The renderer classifies by extension or explicit language, so an extensionless
- * default meant a pasted Markdown document rendered as plain text in a product whose
- * whole point is rendering Markdown.
- */
-const DEFAULT_EXTENSION = '.md';
-
-/** The API's own ceiling, so the + button cannot build a draft that fails to save. */
-const MAX_FILES = 20;
-
 export function createEmptyDraft(): EditorDraftType {
   return {
     title: '',
-    files: [createDraftFile(`untitled-1${DEFAULT_EXTENSION}`)],
+    files: [createDraftFile(`untitled-1${DEFAULT_FILE_EXTENSION}`)],
     activeIndex: 0,
   };
 }
@@ -53,7 +43,7 @@ export function createDraftFromGist(gist: GistType): EditorDraftType {
 
   return {
     title: gist.title,
-    files: files.length > 0 ? files : [createDraftFile(`untitled-1${DEFAULT_EXTENSION}`)],
+    files: files.length > 0 ? files : [createDraftFile(`untitled-1${DEFAULT_FILE_EXTENSION}`)],
     activeIndex: 0,
   };
 }
@@ -80,7 +70,7 @@ export function editorReducer(draft: EditorDraftType, action: EditorActionType):
 }
 
 function addFile(draft: EditorDraftType): EditorDraftType {
-  if (draft.files.length >= MAX_FILES) return draft;
+  if (draft.files.length >= MAX_FILES_PER_GIST) return draft;
 
   const file = createDraftFile(nextUntitledName(draft.files));
   return {
@@ -103,7 +93,7 @@ function attachFiles(draft: EditorDraftType, added: AttachedTextType[]): EditorD
   const files = [...base];
 
   for (const file of added) {
-    if (files.length >= MAX_FILES) break;
+    if (files.length >= MAX_FILES_PER_GIST) break;
     files.push({
       id: crypto.randomUUID(),
       filename: freeFilename(files, file.filename),
@@ -185,8 +175,8 @@ function isFilenameTaken(files: DraftFileType[], filename: string, ignoreIndex: 
 function nextUntitledName(files: DraftFileType[]): string {
   const taken = new Set(files.map((file) => file.filename));
   let n = files.length + 1;
-  while (taken.has(`untitled-${n}${DEFAULT_EXTENSION}`)) n += 1;
-  return `untitled-${n}${DEFAULT_EXTENSION}`;
+  while (taken.has(`untitled-${n}${DEFAULT_FILE_EXTENSION}`)) n += 1;
+  return `untitled-${n}${DEFAULT_FILE_EXTENSION}`;
 }
 
 function createDraftFile(filename: string): DraftFileType {

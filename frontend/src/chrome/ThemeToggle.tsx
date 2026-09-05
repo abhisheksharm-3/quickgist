@@ -1,21 +1,6 @@
 /** Cycles the theme between following the system, light, and dark. */
-import { Monitor, Moon, Sun } from 'lucide-react';
-import type { ThemeType } from '@/theme/types';
+import { ICON, LABEL, ORDER } from '@/theme/constants';
 import { useTheme } from '@/theme/use-theme';
-
-const ORDER: ThemeType[] = ['system', 'light', 'dark'];
-
-const LABEL: Record<ThemeType, string> = {
-  system: 'Theme: following system',
-  light: 'Theme: light',
-  dark: 'Theme: dark',
-};
-
-const ICON: Record<ThemeType, typeof Monitor> = {
-  system: Monitor,
-  light: Sun,
-  dark: Moon,
-};
 
 /**
  * A single button that cycles the three theme states.

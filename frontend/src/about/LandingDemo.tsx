@@ -1,19 +1,5 @@
+import { SOURCE } from '@/about/content';
 /** The source-and-result pair on the landing page. */
-
-const SOURCE = `# Deploy notes
-
-Two things to check **before** the release:
-
-| Step | Owner |
-| --- | --- |
-| Migrate | backend |
-| Smoke test | anyone |
-
-\`\`\`go
-func main() {
-	fmt.Println("ready")
-}
-\`\`\``;
 
 /**
  * What a paste turns into.

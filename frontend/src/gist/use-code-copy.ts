@@ -1,8 +1,6 @@
 /** A copy button on every code block in a rendered document. */
 import { useEffect } from 'react';
-
-const BLOCK_SELECTOR = '.code-block, .chroma';
-const BUTTON_CLASS = 'code-copy';
+import { BLOCK_SELECTOR, BUTTON_CLASS } from '@/gist/constants';
 
 /**
  * Adds a copy button to each code block inside `container`.

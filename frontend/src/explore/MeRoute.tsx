@@ -8,6 +8,7 @@ import { RouteError } from '@/chrome/RouteError';
 import { CommandPalette } from '@/command/CommandPalette';
 import { GistList } from '@/explore/GistList';
 import { MeStats } from '@/explore/MeStats';
+import type { OwnGistsPropsType } from '@/explore/types';
 import { useGistList } from '@/lib/use-gist-queries';
 import { useMyProfile } from '@/lib/use-my-profile';
 
@@ -73,10 +74,6 @@ export function MeRoute() {
     </>
   );
 }
-
-type OwnGistsPropsType = {
-  handle: string;
-};
 
 function OwnGists({ handle }: OwnGistsPropsType) {
   const gists = useGistList({ author: handle, limit: 100 });

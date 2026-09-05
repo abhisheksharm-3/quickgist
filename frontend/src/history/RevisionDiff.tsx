@@ -2,15 +2,9 @@
 import { ListSkeleton } from '@/chrome/ListSkeleton';
 import { RouteError } from '@/chrome/RouteError';
 import { FileDiff } from '@/history/FileDiff';
+import { fileNames } from '@/history/revision-files';
+import type { RevisionDiffPropsType } from '@/history/types';
 import { useRestoreRevision, useRevision } from '@/lib/use-gist-queries';
-import type { GistType, RevisionType } from '@/types';
-
-type RevisionDiffPropsType = {
-  slug: string;
-  revision: number;
-  gist: GistType | undefined;
-  canRestore: boolean;
-};
 
 export function RevisionDiff({ slug, revision, gist, canRestore }: RevisionDiffPropsType) {
   const stored = useRevision(slug, revision);
@@ -56,17 +50,4 @@ export function RevisionDiff({ slug, revision, gist, canRestore }: RevisionDiffP
       </div>
     </div>
   );
-}
-
-/** Every filename in either version, in the revision's order first. */
-function fileNames(stored: RevisionType, gist: GistType | undefined): string[] {
-  const names = stored.files.map((file) => file.filename);
-
-  for (const file of gist?.files ?? []) {
-    if (!names.includes(file.filename)) {
-      names.push(file.filename);
-    }
-  }
-
-  return names;
 }

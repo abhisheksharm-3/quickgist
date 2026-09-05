@@ -11,35 +11,6 @@ import (
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
-// Error codes clients can branch on. The message beside them is for humans and may
-// change; these do not.
-const (
-	codeNotFound           = "not_found"
-	codeForbidden          = "forbidden"
-	codeUnauthenticated    = "unauthenticated"
-	codeInvalidRequest     = "invalid_request"
-	codeInvalidJSON        = "invalid_json"
-	codeInvalidForm        = "invalid_form"
-	codeInvalidFilename    = "invalid_filename"
-	codeUnsupportedMedia   = "unsupported_media_type"
-	codeBodyTooLarge       = "body_too_large"
-	codeFileTooLarge       = "file_too_large"
-	codeRateLimited        = "rate_limited"
-	codeStorageUnavailable = "storage_unavailable"
-	codeInternalError      = "internal_error"
-)
-
-// errorBody is the only error shape this API returns.
-//
-// The previous backend had two, structured JSON from handlers and bare text from
-// middleware, so a client had to parse both to learn what went wrong.
-type errorBody struct {
-	Error struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-	} `json:"error"`
-}
-
 // respond writes a JSON response.
 //
 // The body is encoded into a buffer before the status is written, because encoding
