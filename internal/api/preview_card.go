@@ -2,6 +2,7 @@
 package api
 
 import (
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 	"html"
 	"io"
 	"net/http"
@@ -9,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/abhisheksharm-3/quickgist/internal/card"
-	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
 // OGImage handles GET /v1/gists/{slug}/og.png.
@@ -72,7 +72,7 @@ func (a *API) PreviewHTML(w http.ResponseWriter, r *http.Request) {
 //
 // Every value is escaped as HTML text and then sits inside a quoted attribute, since
 // a gist's title and description are written by whoever made it.
-func previewDocument(gist *store.Gist, pageURL, imageURL string) string {
+func previewDocument(gist *domain.Gist, pageURL, imageURL string) string {
 	title := html.EscapeString(gist.Title)
 	description := html.EscapeString(previewDescription(gist))
 
@@ -126,7 +126,7 @@ func requestBaseURL(r *http.Request) string {
 }
 
 // previewDescription is the gist's own description, or its shape when it has none.
-func previewDescription(gist *store.Gist) string {
+func previewDescription(gist *domain.Gist) string {
 	if strings.TrimSpace(gist.Description) != "" {
 		return gist.Description
 	}
@@ -143,7 +143,7 @@ func previewDescription(gist *store.Gist) string {
 }
 
 // cardData flattens a gist into what the card draws.
-func cardData(gist *store.Gist) card.Data {
+func cardData(gist *domain.Gist) card.Data {
 	data := card.Data{
 		Title:      gist.Title,
 		Visibility: gist.Visibility,

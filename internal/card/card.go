@@ -3,7 +3,6 @@ package card
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
 	"image"
 	"image/color"
@@ -15,17 +14,6 @@ import (
 	"golang.org/x/image/font/opentype"
 	"golang.org/x/image/math/fixed"
 )
-
-//go:embed fonts/IBMPlexSans-SemiBold.ttf
-var fonts embed.FS
-
-// Renderer draws cards. Safe for concurrent use: the faces it holds are read-only
-// after New, and each Render draws onto its own image.
-type Renderer struct {
-	title font.Face
-	meta  font.Face
-	mark  font.Face
-}
 
 // New parses the embedded font once, at startup, so a request never pays for it.
 func New() (*Renderer, error) {

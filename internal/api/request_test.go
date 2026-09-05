@@ -1,11 +1,10 @@
 package api
 
 import (
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 	"net/url"
 	"strings"
 	"testing"
-
-	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
 func TestPageSize(t *testing.T) {
@@ -44,7 +43,7 @@ func TestParseRetentionDays(t *testing.T) {
 		{name: "absent means default", raw: "", want: nil},
 		{name: "whitespace means default", raw: "  ", want: nil},
 		{name: "one day", raw: "1", want: intPtr(1)},
-		{name: "at the ceiling", raw: "30", want: intPtr(store.MaxRetentionDays)},
+		{name: "at the ceiling", raw: "30", want: intPtr(domain.MaxRetentionDays)},
 		{name: "over the ceiling", raw: "31", wantErr: true},
 		{name: "far over", raw: "3650", wantErr: true},
 		{name: "zero", raw: "0", wantErr: true},
@@ -209,10 +208,10 @@ func TestResolveVisibility(t *testing.T) {
 		want      string
 		wantErr   bool
 	}{
-		{requested: "", want: store.VisibilityUnlisted},
-		{requested: "public", want: store.VisibilityPublic},
-		{requested: "unlisted", want: store.VisibilityUnlisted},
-		{requested: "private", want: store.VisibilityPrivate},
+		{requested: "", want: domain.VisibilityUnlisted},
+		{requested: "public", want: domain.VisibilityPublic},
+		{requested: "unlisted", want: domain.VisibilityUnlisted},
+		{requested: "private", want: domain.VisibilityPrivate},
 		{requested: "Public", wantErr: true},
 		{requested: "secret", wantErr: true},
 		{requested: "draft", wantErr: true},

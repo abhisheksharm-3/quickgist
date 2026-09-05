@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"fmt"
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 	"strings"
 	"testing"
 
@@ -73,19 +74,19 @@ func TestTranslateKeepsTheValidationMessage(t *testing.T) {
 
 func TestValidVisibility(t *testing.T) {
 	cases := map[string]bool{
-		VisibilityPublic:   true,
-		VisibilityUnlisted: true,
-		VisibilityPrivate:  true,
-		"":                 false,
-		"Public":           false,
-		"draft":            false,
-		"secret":           false,
+		domain.VisibilityPublic:   true,
+		domain.VisibilityUnlisted: true,
+		domain.VisibilityPrivate:  true,
+		"":                        false,
+		"Public":                  false,
+		"draft":                   false,
+		"secret":                  false,
 	}
 
 	for value, want := range cases {
 		t.Run("visibility="+value, func(t *testing.T) {
-			if got := ValidVisibility(value); got != want {
-				t.Errorf("ValidVisibility(%q) = %v, want %v", value, got, want)
+			if got := domain.ValidVisibility(value); got != want {
+				t.Errorf("domain.ValidVisibility(%q) = %v, want %v", value, got, want)
 			}
 		})
 	}

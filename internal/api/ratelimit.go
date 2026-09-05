@@ -5,24 +5,10 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"golang.org/x/time/rate"
 )
-
-// limiter is a token bucket per client address.
-type limiter struct {
-	mu       sync.Mutex
-	visitors map[string]*visitor
-	rate     rate.Limit
-	burst    int
-}
-
-type visitor struct {
-	limiter  *rate.Limiter
-	lastSeen time.Time
-}
 
 // newLimiter builds a limiter allowing rps requests a second with the given burst.
 func newLimiter(rps, burst int) *limiter {

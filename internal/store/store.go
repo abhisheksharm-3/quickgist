@@ -15,11 +15,6 @@ import (
 	"github.com/abhisheksharm-3/quickgist/internal/auth"
 )
 
-// Store holds the connection pool.
-type Store struct {
-	pool *pgxpool.Pool
-}
-
 // Open connects and verifies reachability before returning, so a bad DATABASE_URL
 // fails at startup rather than on the first request.
 func Open(ctx context.Context, databaseURL string, maxConns int32) (*Store, error) {

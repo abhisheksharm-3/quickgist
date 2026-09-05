@@ -4,21 +4,20 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
 // toNewFiles validates a client's file set and converts it for the store.
 //
 // Both create and replace accept the same shape, so the rules live here once rather
 // than being restated per handler.
-func toNewFiles(inputs []fileInput) ([]store.NewFile, error) {
+func toNewFiles(inputs []fileInput) ([]domain.NewFile, error) {
 	if len(inputs) == 0 {
 		return nil, errors.New("at least one file is required")
 	}
@@ -26,7 +25,7 @@ func toNewFiles(inputs []fileInput) ([]store.NewFile, error) {
 		return nil, errors.New("a gist takes at most 20 files")
 	}
 
-	files := make([]store.NewFile, 0, len(inputs))
+	files := make([]domain.NewFile, 0, len(inputs))
 	seen := make(map[string]struct{}, len(inputs))
 
 	for _, in := range inputs {
@@ -44,7 +43,7 @@ func toNewFiles(inputs []fileInput) ([]store.NewFile, error) {
 		}
 
 		content := in.Content
-		files = append(files, store.NewFile{
+		files = append(files, domain.NewFile{
 			Filename: name,
 			Language: in.Language,
 			Content:  &content,
@@ -120,22 +119,22 @@ func pageSize(raw string) int {
 // Both halves travel together: a timestamp without the slug that goes with it cannot
 // order rows created in the same instant, and the page after such a boundary silently
 // dropped every one of them.
-func parseCursor(q url.Values) (store.Cursor, error) {
+func parseCursor(q url.Values) (domain.Cursor, error) {
 	raw := q.Get("before")
 	if raw == "" {
-		return store.Cursor{}, nil
+		return domain.Cursor{}, nil
 	}
 
 	at, err := time.Parse(time.RFC3339Nano, raw)
 	if err != nil {
-		return store.Cursor{}, errors.New("before must be an RFC3339 timestamp")
+		return domain.Cursor{}, errors.New("before must be an RFC3339 timestamp")
 	}
 
-	cursor := store.Cursor{Before: &at}
+	cursor := domain.Cursor{Before: &at}
 
 	if slug := q.Get("beforeSlug"); slug != "" {
 		if err := validSlug(slug); err != nil {
-			return store.Cursor{}, err
+			return domain.Cursor{}, err
 		}
 		cursor.BeforeSlug = &slug
 	}
@@ -165,7 +164,7 @@ func parseRetentionDays(raw string) (*int, error) {
 	if err != nil {
 		return nil, errors.New("retentionDays must be a whole number of days")
 	}
-	if n < 1 || n > store.MaxRetentionDays {
+	if n < 1 || n > domain.MaxRetentionDays {
 		return nil, errors.New("retentionDays must be between 1 and 30")
 	}
 	return &n, nil

@@ -15,20 +15,6 @@ import (
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
-// API holds the handler dependencies.
-type API struct {
-	cfg            *config.Config
-	store          *store.Store
-	blobs          *blob.Store
-	renderer       *render.Renderer
-	cards          *card.Renderer
-	verifier       *auth.Verifier
-	log            *slog.Logger
-	version        string
-	css            string
-	previewLimiter *limiter
-}
-
 // New builds the API.
 //
 // The highlight stylesheet is generated once here because it depends only on the

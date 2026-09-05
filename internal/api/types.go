@@ -4,14 +4,24 @@
 // of a stored record that a client sees. They live together so the API's surface can
 // be read in one file rather than reconstructed from eight handlers.
 //
-// Types that exist only as the receiver for one file's behaviour stay with that
-// behaviour: API, the middleware chain, the rate limiter. Separating a struct from
-// the only methods it has would cost more than the consistency is worth.
+// The receiver types are here too: API, the middleware chain, the rate limiter. Go
+// requires a method to sit in its type's package, not in its file, so the
+// declarations gather here while the behaviour stays in the file it belongs to.
 package api
 
 import (
+	"log/slog"
+	"net/http"
+	"sync"
 	"time"
 
+	"golang.org/x/time/rate"
+
+	"github.com/abhisheksharm-3/quickgist/internal/auth"
+	"github.com/abhisheksharm-3/quickgist/internal/blob"
+	"github.com/abhisheksharm-3/quickgist/internal/card"
+	"github.com/abhisheksharm-3/quickgist/internal/config"
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 	"github.com/abhisheksharm-3/quickgist/internal/render"
 	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
@@ -84,14 +94,51 @@ type fileView struct {
 
 // gistView is a gist as a client sees it.
 type gistView struct {
-	Slug        string        `json:"slug"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Visibility  string        `json:"visibility"`
-	ViewCount   int64         `json:"viewCount"`
-	CreatedAt   time.Time     `json:"createdAt"`
-	UpdatedAt   time.Time     `json:"updatedAt"`
-	ExpiresAt   *time.Time    `json:"expiresAt"`
-	Author      *store.Author `json:"author"`
-	Files       []fileView    `json:"files"`
+	Slug        string         `json:"slug"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	Visibility  string         `json:"visibility"`
+	ViewCount   int64          `json:"viewCount"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	ExpiresAt   *time.Time     `json:"expiresAt"`
+	Author      *domain.Author `json:"author"`
+	Files       []fileView     `json:"files"`
+}
+
+// API holds the handler dependencies.
+type API struct {
+	cfg            *config.Config
+	store          *store.Store
+	blobs          *blob.Store
+	renderer       *render.Renderer
+	cards          *card.Renderer
+	verifier       *auth.Verifier
+	log            *slog.Logger
+	version        string
+	css            string
+	previewLimiter *limiter
+}
+
+// limiter is a token bucket per client address.
+type limiter struct {
+	mu       sync.Mutex
+	visitors map[string]*visitor
+	rate     rate.Limit
+	burst    int
+}
+
+type visitor struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+// middleware wraps a handler.
+type middleware func(http.Handler) http.Handler
+
+// recorder captures the status and byte count for logging.
+type recorder struct {
+	http.ResponseWriter
+	status int
+	bytes  int
 }

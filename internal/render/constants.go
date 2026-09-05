@@ -45,3 +45,10 @@ var markdownExtensions = map[string]struct{}{
 	".mkd":      {},
 	".mdx":      {},
 }
+
+const (
+	KindMarkdown Kind = "markdown"
+	KindCode     Kind = "code"
+	KindText     Kind = "text"
+	KindBinary   Kind = "binary"
+)

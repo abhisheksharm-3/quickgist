@@ -3,6 +3,7 @@ package store
 
 import (
 	"context"
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 
 	"github.com/abhisheksharm-3/quickgist/internal/auth"
 )
@@ -12,8 +13,8 @@ import (
 // It reports ErrNotFound when the caller has no profile row, which should not happen
 // because handle_new_user() creates one for every account, but is worth answering
 // honestly rather than inventing a handle.
-func (s *Store) MyProfile(ctx context.Context, id *auth.Identity) (*Author, error) {
-	var author Author
+func (s *Store) MyProfile(ctx context.Context, id *auth.Identity) (*domain.Author, error) {
+	var author domain.Author
 	if err := s.queryJSON(ctx, id, &author, "select my_profile()"); err != nil {
 		return nil, err
 	}

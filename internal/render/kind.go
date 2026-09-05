@@ -9,16 +9,6 @@ import (
 	"github.com/alecthomas/chroma/v2/lexers"
 )
 
-// Kind is how a file was interpreted, so a client knows what it received.
-type Kind string
-
-const (
-	KindMarkdown Kind = "markdown"
-	KindCode     Kind = "code"
-	KindText     Kind = "text"
-	KindBinary   Kind = "binary"
-)
-
 // KindOf classifies a file from its metadata alone, for listings that carry no
 // content. It agrees with Render for the same filename and language.
 func KindOf(filename, language string) Kind {

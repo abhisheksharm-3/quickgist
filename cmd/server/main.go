@@ -24,13 +24,6 @@ import (
 // version is overridden at build time with -ldflags "-X main.version=...".
 var version = "dev"
 
-const (
-	databaseConnectTimeout = 15 * time.Second
-	readHeaderTimeout      = 5 * time.Second
-	telemetryFlushTimeout  = 5 * time.Second
-	maxHeaderBytes         = 1 << 20
-)
-
 func main() {
 	if err := run(); err != nil {
 		slog.Error("fatal", "error", err)

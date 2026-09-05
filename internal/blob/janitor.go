@@ -7,19 +7,6 @@ import (
 	"time"
 )
 
-// Janitor deletes bucket objects whose rows have been removed.
-//
-// Postgres cannot reach the bucket, so without this an expired upload's bytes would
-// be billed forever. A path is released only after its object is gone, which makes
-// the queue safe to retry: a crash mid-sweep leaves work to redo, never work lost.
-type Janitor struct {
-	store    *Store
-	queue    Queue
-	log      *slog.Logger
-	interval time.Duration
-	batch    int
-}
-
 // NewJanitor builds a Janitor that sweeps every ten minutes.
 func NewJanitor(store *Store, queue Queue, log *slog.Logger) *Janitor {
 	return &Janitor{

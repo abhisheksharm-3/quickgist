@@ -1,112 +1,14 @@
-// The gist domain types, shaped to match the jsonb the SQL functions return.
+// The handle this package hands out.
+//
+// The records it reads and writes are in internal/domain, which every layer shares;
+// this is the connection pool and the logger behind them.
 package store
 
-import "time"
+import (
+	"github.com/jackc/pgx/v5/pgxpool"
+)
 
-// ValidVisibility reports whether v is one of the three enum values. Callers must
-// check this before passing a visibility to the database, so an unknown value
-// becomes a validation error rather than a failed cast.
-func ValidVisibility(v string) bool {
-	return v == VisibilityPublic || v == VisibilityUnlisted || v == VisibilityPrivate
-}
-
-// Author is the public face of a profile.
-type Author struct {
-	Handle      string  `json:"handle"`
-	DisplayName *string `json:"display_name"`
-	AvatarURL   *string `json:"avatar_url"`
-}
-
-// File is one file in a gist. Exactly one of Content and StoragePath is set, an
-// invariant the text_or_blob_not_both constraint enforces.
-type File struct {
-	ID            string     `json:"id"`
-	Filename      string     `json:"filename"`
-	Language      *string    `json:"language"`
-	Content       *string    `json:"content"`
-	StoragePath   *string    `json:"storage_path"`
-	ByteSize      int64      `json:"byte_size"`
-	BlobExpiresAt *time.Time `json:"blob_expires_at"`
-	RenderedHTML  *string    `json:"rendered_html"`
-	RendererHash  *string    `json:"renderer_hash"`
-}
-
-// Gist is a shared set of files.
-type Gist struct {
-	Slug        string     `json:"slug"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	Visibility  string     `json:"visibility"`
-	ViewCount   int64      `json:"view_count"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	ExpiresAt   *time.Time `json:"expires_at"`
-	Author      *Author    `json:"author"`
-	Files       []File     `json:"files"`
-}
-
-// Cursor is a page boundary in the gist feed.
-//
-// Both halves are needed. created_at alone is not unique, and comparing on it alone
-// dropped every gist that shared a timestamp with the last row of the page before.
-type Cursor struct {
-	Before     *time.Time
-	BeforeSlug *string
-}
-
-// NewFile is an incoming file on create or replace. RetentionDays applies only to an
-// upload and is capped at MaxRetentionDays by the database regardless of its value.
-type NewFile struct {
-	Filename      string  `json:"filename"`
-	Language      *string `json:"language,omitempty"`
-	Content       *string `json:"content,omitempty"`
-	StoragePath   *string `json:"storage_path,omitempty"`
-	ByteSize      int64   `json:"byte_size,omitempty"`
-	RetentionDays *int    `json:"retention_days,omitempty"`
-}
-
-// CreateGistInput is a request to create a gist.
-type CreateGistInput struct {
-	Title       string
-	Description string
-	Visibility  string
-	ExpiresAt   *time.Time
-	Files       []NewFile
-}
-
-// UpdateGistInput carries the metadata fields to change. A nil field is left as it is.
-type UpdateGistInput struct {
-	Title       *string
-	Description *string
-	Visibility  *string
-	ExpiresAt   *time.Time
-}
-
-// RevisionSummary is one entry in a gist's history.
-type RevisionSummary struct {
-	Revision  int       `json:"revision"`
-	Title     string    `json:"title"`
-	FileCount int       `json:"fileCount"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-// RevisionFile is a file as a revision stored it.
-//
-// A revision holds the same shape the replace endpoint accepts, so restoring is a
-// replace with old input rather than a second code path.
-type RevisionFile struct {
-	Filename    string  `json:"filename"`
-	Language    *string `json:"language,omitempty"`
-	Content     *string `json:"content,omitempty"`
-	StoragePath *string `json:"storage_path,omitempty"`
-	ByteSize    int64   `json:"byte_size,omitempty"`
-}
-
-// Revision is one stored version of a gist.
-type Revision struct {
-	Revision    int            `json:"revision"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	Files       []RevisionFile `json:"files"`
+// Store holds the connection pool.
+type Store struct {
+	pool *pgxpool.Pool
 }

@@ -3,10 +3,9 @@ package api
 
 import (
 	"errors"
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 	"net/http"
 	"strings"
-
-	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
 // CreateGist handles POST /v1/gists.
@@ -28,7 +27,7 @@ func (a *API) CreateGist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	identity := a.identity(r)
-	if visibility == store.VisibilityPrivate && identity == nil {
+	if visibility == domain.VisibilityPrivate && identity == nil {
 		a.fail(w, r, http.StatusUnauthorized, codeUnauthenticated, nil)
 		return
 	}
@@ -39,7 +38,7 @@ func (a *API) CreateGist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gist, err := a.store.CreateGist(r.Context(), identity, store.CreateGistInput{
+	gist, err := a.store.CreateGist(r.Context(), identity, domain.CreateGistInput{
 		Title:       req.Title,
 		Description: req.Description,
 		Visibility:  visibility,
@@ -79,12 +78,12 @@ func (a *API) UpdateGist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Visibility != nil && !store.ValidVisibility(*req.Visibility) {
+	if req.Visibility != nil && !domain.ValidVisibility(*req.Visibility) {
 		a.fail(w, r, http.StatusUnprocessableEntity, codeInvalidRequest, errors.New("unknown visibility"))
 		return
 	}
 
-	gist, err := a.store.UpdateGist(r.Context(), id, r.PathValue("slug"), store.UpdateGistInput{
+	gist, err := a.store.UpdateGist(r.Context(), id, r.PathValue("slug"), domain.UpdateGistInput{
 		Title:       req.Title,
 		Description: req.Description,
 		Visibility:  req.Visibility,
@@ -188,9 +187,9 @@ func (a *API) SearchGists(w http.ResponseWriter, r *http.Request) {
 // one, so a typo cannot silently make a gist public.
 func resolveVisibility(requested string) (string, error) {
 	if requested == "" {
-		return store.VisibilityUnlisted, nil
+		return domain.VisibilityUnlisted, nil
 	}
-	if !store.ValidVisibility(requested) {
+	if !domain.ValidVisibility(requested) {
 		return "", errors.New("unknown visibility")
 	}
 	return requested, nil

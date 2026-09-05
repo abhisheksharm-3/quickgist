@@ -5,6 +5,7 @@
 package card
 
 import (
+	"embed"
 	"image/color"
 )
 
@@ -32,3 +33,6 @@ var (
 	dim        = color.RGBA{0x8b, 0x90, 0x9a, 0xff}
 	accent     = color.RGBA{0x3b, 0x82, 0xf6, 0xff}
 )
+
+//go:embed fonts/IBMPlexSans-SemiBold.ttf
+var fonts embed.FS

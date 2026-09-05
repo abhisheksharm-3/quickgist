@@ -10,22 +10,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-// Verifier validates access tokens against a cached JWKS.
-type Verifier struct {
-	jwksURL string
-	issuer  string
-	client  *http.Client
-
-	mu        sync.RWMutex
-	keys      map[string]*ecdsa.PublicKey
-	fetchedAt time.Time
-}
 
 // NewVerifier builds a Verifier.
 //

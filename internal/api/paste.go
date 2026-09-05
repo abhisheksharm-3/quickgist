@@ -3,12 +3,11 @@ package api
 
 import (
 	"errors"
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
 // Paste handles POST /v1/paste.
@@ -36,7 +35,7 @@ func (a *API) Paste(w http.ResponseWriter, r *http.Request) {
 	}
 
 	identity := a.identity(r)
-	if visibility == store.VisibilityPrivate && identity == nil {
+	if visibility == domain.VisibilityPrivate && identity == nil {
 		a.fail(w, r, http.StatusUnauthorized, codeUnauthenticated, nil)
 		return
 	}
@@ -62,11 +61,11 @@ func (a *API) Paste(w http.ResponseWriter, r *http.Request) {
 		title = filename
 	}
 
-	gist, err := a.store.CreateGist(r.Context(), identity, store.CreateGistInput{
+	gist, err := a.store.CreateGist(r.Context(), identity, domain.CreateGistInput{
 		Title:      title,
 		Visibility: visibility,
 		ExpiresAt:  expiresAt,
-		Files: []store.NewFile{{
+		Files: []domain.NewFile{{
 			Filename: filename,
 			Content:  ptr(string(content)),
 			ByteSize: int64(len(content)),

@@ -9,19 +9,6 @@ import (
 	"time"
 )
 
-// Visibility values, matching the gist_visibility enum in 0001_init.sql.
-const (
-	VisibilityPublic   = "public"
-	VisibilityUnlisted = "unlisted"
-	VisibilityPrivate  = "private"
-)
-
-// MaxRetentionDays is the ceiling on how long an upload is kept. The
-// blob_retention_within_ceiling constraint enforces it; this constant exists so the
-// API can reject an out-of-range request with a clear error instead of letting the
-// database clamp it silently.
-const MaxRetentionDays = 30
-
 // Postgres error codes this layer recognises. Anything else is a real fault and is
 // returned unwrapped so it reaches the error reporter.
 const (

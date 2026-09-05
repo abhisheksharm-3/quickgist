@@ -3,6 +3,7 @@ package api
 
 import (
 	"errors"
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 	"net/http"
 
 	"github.com/abhisheksharm-3/quickgist/internal/auth"
@@ -73,7 +74,7 @@ func (a *API) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := appendUpload(gist.Files, store.NewFile{
+	files := appendUpload(gist.Files, domain.NewFile{
 		Filename:      filename,
 		StoragePath:   &objectPath,
 		ByteSize:      header.Size,
@@ -94,7 +95,7 @@ func (a *API) UploadFile(w http.ResponseWriter, r *http.Request) {
 //
 // Ownership is confirmed before a single byte is accepted, because uploading first
 // and checking after would let anyone burn storage against someone else's gist.
-func (a *API) ownedGist(r *http.Request, id *auth.Identity, slug string) (*store.Gist, error) {
+func (a *API) ownedGist(r *http.Request, id *auth.Identity, slug string) (*domain.Gist, error) {
 	gist, err := a.store.GetGist(r.Context(), id, slug)
 	if err != nil {
 		return nil, err
@@ -133,11 +134,11 @@ func (a *API) discardUpload(r *http.Request, objectPath string) {
 }
 
 // appendUpload returns the existing file set plus one new upload.
-func appendUpload(existing []store.File, added store.NewFile) []store.NewFile {
-	files := make([]store.NewFile, 0, len(existing)+1)
+func appendUpload(existing []domain.File, added domain.NewFile) []domain.NewFile {
+	files := make([]domain.NewFile, 0, len(existing)+1)
 
 	for _, f := range existing {
-		files = append(files, store.NewFile{
+		files = append(files, domain.NewFile{
 			Filename:    f.Filename,
 			Language:    f.Language,
 			Content:     f.Content,

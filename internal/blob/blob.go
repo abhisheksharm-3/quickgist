@@ -4,7 +4,6 @@ package blob
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,21 +14,6 @@ import (
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
-
-// ErrNotFound means no object exists at that path.
-var ErrNotFound = errors.New("blob not found")
-
-// Store is a handle on one storage bucket.
-//
-// The bucket is private and only this service holds its key. Reads are proxied by
-// the API, which checks a gist's visibility first, so a private gist's attachment is
-// never world-readable by URL.
-type Store struct {
-	baseURL string
-	bucket  string
-	key     string
-	client  *http.Client
-}
 
 // New builds a Store. supabaseURL is the project URL, with or without a trailing
 // slash.

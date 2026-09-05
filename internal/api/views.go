@@ -3,13 +3,13 @@ package api
 
 import (
 	"context"
+	"github.com/abhisheksharm-3/quickgist/internal/domain"
 
 	"github.com/abhisheksharm-3/quickgist/internal/render"
-	"github.com/abhisheksharm-3/quickgist/internal/store"
 )
 
 // view renders a gist for a client, filling the render cache on a miss.
-func (a *API) view(ctx context.Context, g *store.Gist) gistView {
+func (a *API) view(ctx context.Context, g *domain.Gist) gistView {
 	out := newGistView(g)
 
 	for _, f := range g.Files {
@@ -23,7 +23,7 @@ func (a *API) view(ctx context.Context, g *store.Gist) gistView {
 //
 // A feed of thirty gists does not need thirty rendered documents, and sending them
 // would make the response enormous for no benefit.
-func (a *API) summaries(gists []store.Gist) []gistView {
+func (a *API) summaries(gists []domain.Gist) []gistView {
 	out := make([]gistView, 0, len(gists))
 
 	for i := range gists {
@@ -41,7 +41,7 @@ func (a *API) summaries(gists []store.Gist) []gistView {
 }
 
 // newGistView copies a gist's metadata, leaving Files empty for the caller to fill.
-func newGistView(g *store.Gist) gistView {
+func newGistView(g *domain.Gist) gistView {
 	return gistView{
 		Slug:        g.Slug,
 		Title:       g.Title,
@@ -57,7 +57,7 @@ func newGistView(g *store.Gist) gistView {
 }
 
 // newFileView describes a file without rendering it.
-func newFileView(slug string, f store.File) fileView {
+func newFileView(slug string, f domain.File) fileView {
 	v := fileView{
 		Filename:      f.Filename,
 		Language:      f.Language,
@@ -77,7 +77,7 @@ func newFileView(slug string, f store.File) fileView {
 
 // renderFile produces a file's HTML, preferring a cached render from this renderer
 // version and populating the cache when there is none.
-func (a *API) renderFile(ctx context.Context, slug string, f store.File) fileView {
+func (a *API) renderFile(ctx context.Context, slug string, f domain.File) fileView {
 	v := newFileView(slug, f)
 
 	if f.Content == nil {
@@ -108,7 +108,7 @@ func (a *API) renderFile(ctx context.Context, slug string, f store.File) fileVie
 // cachedRenderIsCurrent reports whether a stored render came from this renderer
 // version. One from an older version is ignored, which is what makes the renderer
 // hash a working cache key rather than a comment.
-func (a *API) cachedRenderIsCurrent(f store.File) bool {
+func (a *API) cachedRenderIsCurrent(f domain.File) bool {
 	return f.RenderedHTML != nil &&
 		f.RendererHash != nil &&
 		*f.RendererHash == a.renderer.Hash()

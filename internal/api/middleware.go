@@ -12,9 +12,6 @@ import (
 	"github.com/abhisheksharm-3/quickgist/internal/auth"
 )
 
-// middleware wraps a handler.
-type middleware func(http.Handler) http.Handler
-
 // chain applies middleware so the first argument is the outermost layer.
 func chain(mw ...middleware) middleware {
 	return func(next http.Handler) http.Handler {
@@ -23,13 +20,6 @@ func chain(mw ...middleware) middleware {
 		}
 		return next
 	}
-}
-
-// recorder captures the status and byte count for logging.
-type recorder struct {
-	http.ResponseWriter
-	status int
-	bytes  int
 }
 
 func (rec *recorder) WriteHeader(code int) {

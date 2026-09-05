@@ -10,21 +10,12 @@ import (
 	"github.com/alecthomas/chroma/v2"
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/alecthomas/chroma/v2/styles"
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	goldmarkhtml "github.com/yuin/goldmark/renderer/html"
 )
-
-// Renderer converts file content to HTML. Safe for concurrent use.
-type Renderer struct {
-	md     goldmark.Markdown
-	code   *chromahtml.Formatter
-	policy *bluemonday.Policy
-	hash   string
-}
 
 // New builds a Renderer with the Markdown extensions, highlighter, and sanitizer
 // policy fixed for the life of the process.

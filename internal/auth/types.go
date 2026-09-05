@@ -5,6 +5,13 @@
 // exist is the methods in one file belongs beside them.
 package auth
 
+import (
+	"crypto/ecdsa"
+	"net/http"
+	"sync"
+	"time"
+)
+
 // Identity is a verified caller.
 type Identity struct {
 	UserID string
@@ -23,4 +30,15 @@ type jwksDocument struct {
 		X   string `json:"x"`
 		Y   string `json:"y"`
 	} `json:"keys"`
+}
+
+// Verifier validates access tokens against a cached JWKS.
+type Verifier struct {
+	jwksURL string
+	issuer  string
+	client  *http.Client
+
+	mu        sync.RWMutex
+	keys      map[string]*ecdsa.PublicKey
+	fetchedAt time.Time
 }

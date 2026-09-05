@@ -4,18 +4,11 @@ package auth
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-// ErrUnauthenticated is returned for any token that cannot be trusted.
-//
-// It is deliberately opaque. Telling a caller which check their token failed helps
-// an attacker more than it helps a client.
-var ErrUnauthenticated = errors.New("unauthenticated")
 
 // WithIdentity stores a verified identity on the context.
 func WithIdentity(ctx context.Context, id Identity) context.Context {
