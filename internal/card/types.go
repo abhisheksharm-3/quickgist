@@ -19,7 +19,8 @@ type Data struct {
 // Renderer draws cards. Safe for concurrent use: the faces it holds are read-only
 // after New, and each Render draws onto its own image.
 type Renderer struct {
-	title font.Face
-	meta  font.Face
-	mark  font.Face
+	title    font.Face
+	meta     font.Face
+	mark     font.Face
+	wordmark font.Face
 }

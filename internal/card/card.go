@@ -27,8 +27,8 @@ func New() (*Renderer, error) {
 		return nil, fmt.Errorf("parse embedded font: %w", err)
 	}
 
-	faces := make([]font.Face, 0, 3)
-	for _, size := range []float64{titleSize, metaSize, markSize} {
+	faces := make([]font.Face, 0, 4)
+	for _, size := range []float64{titleSize, metaSize, markSize, wordmarkSize} {
 		face, err := opentype.NewFace(parsed, &opentype.FaceOptions{Size: size, DPI: 72, Hinting: font.HintingFull})
 		if err != nil {
 			return nil, fmt.Errorf("build %gpt face: %w", size, err)
@@ -36,7 +36,7 @@ func New() (*Renderer, error) {
 		faces = append(faces, face)
 	}
 
-	return &Renderer{title: faces[0], meta: faces[1], mark: faces[2]}, nil
+	return &Renderer{title: faces[0], meta: faces[1], mark: faces[2], wordmark: faces[3]}, nil
 }
 
 // Render draws one card as a PNG.

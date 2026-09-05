@@ -145,6 +145,18 @@ The frontend's `vercel.json` routes crawler user agents to the first of those, a
 `https://quickgist.onrender.com`. A Render subdomain is global, so that name has to be the
 service's own: pointing it at a guess sends every link preview to a stranger.
 
+The product's own card is a static asset rather than an endpoint, since it never varies
+per request and a crawler should not wait on a sleeping instance:
+
+```sh
+go run ./cmd/ogimage        # writes frontend/public/og.png
+```
+
+It comes from the same `internal/card` package the gist cards do, so the two cannot
+drift. A gist's card is dark, like the document it opens; the product's is the blue
+field the footer uses. `frontend/index.html` carries the tags that point at it, because
+a crawler never runs the script that would set them.
+
 Every error has one shape:
 
 ```json

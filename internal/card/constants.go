@@ -24,7 +24,45 @@ const (
 
 	maxTitleLines = 3
 	maxFileChips  = 4
+
+	// The site card's own geometry: a wordmark large enough to bleed off the bottom
+	// edge, the weave of the hatch behind it, and the tracking on the eyebrow.
+	wordmarkSize    = 240
+	markBleed       = -52
+	hatchStep       = 9
+	eyebrowTracking = 4
+
+	// The vertical rhythm of the site card, measured from the top edge.
+	eyebrowBaseline  = 112
+	headlineBaseline = 224
+	headlineLeading  = 14
+	ruleDrop         = 30
+	ruleWidth        = 96
+	taglineDrop      = 26
 )
+
+// The blue field, as the footer paints it. Every value here is the flat result of
+// compositing white over #2846e8 at the opacity the CSS uses, because a PNG has no
+// layers to composite at draw time.
+var (
+	fieldBackground = color.RGBA{0x28, 0x46, 0xe8, 0xff}
+	fieldGrid       = color.RGBA{0x3b, 0x56, 0xea, 0xff}
+	fieldHatch      = color.RGBA{0x33, 0x50, 0xea, 0xff}
+	fieldHeading    = color.RGBA{0xff, 0xff, 0xff, 0xff}
+	fieldDim        = color.RGBA{0xd4, 0xdb, 0xfa, 0xff}
+	fieldFaint      = color.RGBA{0xa9, 0xb8, 0xf5, 0xff}
+	fieldOutline    = color.RGBA{0x6d, 0x83, 0xef, 0xff}
+)
+
+// What the card says. The headline is the editor's own hero line, so the first
+// thing somebody reads in a chat is the first thing they read on the page.
+const (
+	siteEyebrow  = "MARKDOWN AND CODE, AS A LINK"
+	siteTagline  = "Rendered on the server. No account needed."
+	siteWordmark = "quickgist"
+)
+
+var siteHeadline = []string{"Paste it. Send it."}
 
 var (
 	background = color.RGBA{0x0d, 0x0f, 0x13, 0xff}

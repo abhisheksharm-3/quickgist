@@ -3,10 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      The metadata here is what a crawler gets, because none of them run the script
+      that would replace it. React sets its own per route for the person reading, and
+      a gist link is answered by the API's preview document instead, which the
+      frontend's crawler rewrite routes to. This is the product's own face.
+    -->
+    <title>quickgist — Markdown and code, as a link</title>
+    <meta
+      name="description"
+      content="Paste Markdown or code, get a link, send it. Rendered on the server, so whoever opens it reads a real document. No account needed."
+    />
+    <link rel="canonical" href="https://quickgist.vercel.app/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="quickgist" />
+    <meta property="og:title" content="quickgist — Markdown and code, as a link" />
+    <meta
+      property="og:description"
+      content="Paste Markdown or code, get a link, send it. Rendered on the server, so whoever opens it reads a real document. No account needed."
+    />
+    <meta property="og:url" content="https://quickgist.vercel.app/" />
+    <meta property="og:image" content="https://quickgist.vercel.app/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="quickgist: paste it, send it. Markdown and code, as a link."
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="quickgist — Markdown and code, as a link" />
+    <meta
+      name="twitter:description"
+      content="Paste Markdown or code, get a link, send it. Rendered on the server, so whoever opens it reads a real document."
+    />
+    <meta name="twitter:image" content="https://quickgist.vercel.app/og.png" />
+
+    <!-- Dark is the default surface, so the browser chrome should not flash white. -->
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0d0f13" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+
     <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>quickgist</title>
-    <meta name="description" content="Share Markdown and code, fast." />
+    <link rel="manifest" href="/site.webmanifest" />
   </head>
   <body>
     <div id="root"></div>
